@@ -28,12 +28,14 @@ body {
 
 /* style.css */
 .nav-link {
+    border-radius: 15px;
     color: #000 !important; /* Define a cor padrão do texto para preto */
-    transition: 0.4s /* Adiciona transição para background-color e color */
+
 }
 
 .nav-link.active {
-    background-color: #007bff !important; /* Mantém o fundo azul quando ativo */
+    transition: 0.5s;
+    background-color: #ff5400 !important; /* Mantém o fundo azul quando ativo */
     color: #fff !important; /* Mantém o texto branco quando ativo */
     border-radius: 15px;
 }
