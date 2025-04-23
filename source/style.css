@@ -1,0 +1,74 @@
+/* Estilos Gerais */
+body {
+    /* Garante que o body ocupe espaço para o fundo funcionar bem em alguns casos */
+    min-height: 100vh;
+}
+
+/* Estilos para o Menu Lateral Fixo */
+.sidebar {
+    position: fixed; /* Ou sticky, dependendo do efeito desejado */
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 100; /* Atrás do backdrop do offcanvas */
+    padding: 48px 0 0; /* Padding para o conteúdo abaixo do header (se houvesse um fixo) */
+    box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
+    height: 100vh; /* Altura total da viewport */
+    overflow-y: auto; /* Scroll se o menu for muito grande */
+}
+
+.sidebar .nav-link {
+    font-weight: 500;
+    color: #333; /* Cor padrão dos links */
+}
+
+.sidebar .nav-link .bi { /* Estilo para ícones no menu */
+    margin-right: 8px;
+}
+
+.sidebar .nav-link.active {
+    color: #0d6efd; /* Cor do link ativo (azul padrão Bootstrap) */
+}
+
+.sidebar-heading {
+    font-size: .75rem;
+    text-transform: uppercase;
+}
+
+/* Estilos para o Conteúdo Principal */
+.main-content {
+    padding-top: 20px; /* Espaçamento do topo */
+}
+
+.content-wrapper {
+    min-height: 90vh; /* Garante altura mínima para centralizar conteúdo */
+    background-image: url('sua-imagem-escura-aqui.jpg'); /* <<< SUBSTITUA PELO CAMINHO DA SUA IMAGEM */
+    background-color: #212529; /* Cor de fallback caso a imagem não carregue */
+    background-size: cover; /* Faz a imagem cobrir toda a área */
+    background-position: center; /* Centraliza a imagem */
+    background-repeat: no-repeat; /* Não repetir a imagem */
+    color: #f8f9fa; /* Cor do texto (claro) para contrastar com o fundo escuro */
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7); /* Sombra no texto para melhor legibilidade */
+    border-radius: 5px; /* Cantos arredondados (opcional) */
+    margin-top: 1rem; /* Margem acima do conteúdo principal */
+}
+
+.content-wrapper h1 {
+    font-size: 2.5rem; /* Tamanho maior para o título */
+}
+
+.content-wrapper p {
+    font-size: 1.2rem; /* Tamanho um pouco maior para o parágrafo */
+}
+
+
+/* Ajustes para telas pequenas onde o menu lateral fixo some */
+@media (max-width: 991.98px) { /* Ponto de quebra 'lg' do Bootstrap */
+    .main-content {
+        margin-left: 0 !important; /* Remove margem deixada pelo menu lateral */
+        width: 100%;
+    }
+    .content-wrapper {
+        margin-top: 0; /* Remove margem quando não tem menu fixo */
+    }
+}
