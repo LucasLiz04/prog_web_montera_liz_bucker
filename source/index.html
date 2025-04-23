@@ -25,19 +25,19 @@
         <div class="offcanvas-body">
             <ul class="nav flex-column">
                 <li class="nav-item">
-                    <a class="nav-link active" aria-current="page" href="#">Início</a>
+                    <a class="nav-link active" aria-current="page" href="#" id="mobile-inicio">Início</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="#">Jogos</a>
+                    <a class="nav-link" href="#" id="mobile-jogos">Jogos</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="#">Personagens</a>
+                    <a class="nav-link" href="#" id="mobile-personagens">Personagens</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="#">Guias</a>
+                    <a class="nav-link" href="#" id="mobile-guias">Guias</a>
                 </li>
                  <li class="nav-item">
-                    <a class="nav-link disabled" aria-disabled="true">Em breve...</a>
+                    <a class="nav-link disabled" aria-disabled="true" id="mobile-embreve">Em breve...</a>
                 </li>
             </ul>
         </div>
@@ -49,33 +49,33 @@
                 <div class="position-sticky pt-3">
                      <h5 class="sidebar-heading px-3 mt-4 mb-1 text-muted">Menu Wiki</h5>
                      <ul class="nav flex-column">
-                        <li class="nav-item">
-                            <a class="nav-link active" aria-current="page" href="#">
-                                <i class="bi bi-house-door"></i> Início
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#">
-                                <i class="bi bi-controller"></i> Jogos
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#">
-                                <i class="bi bi-person"></i> Personagens
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#">
-                                <i class="bi bi-book"></i> Guias
-                            </a>
-                        </li>
                          <li class="nav-item">
-                            <a class="nav-link disabled" aria-disabled="true">
-                                <i class="bi bi-hourglass-split"></i> Em breve...
-                            </a>
-                        </li>
-                    </ul>
-                </div>
+                             <a class="nav-link active" aria-current="page" href="#" id="desktop-inicio">
+                                 <i class="bi bi-house-door"></i> Início
+                             </a>
+                         </li>
+                         <li class="nav-item">
+                             <a class="nav-link" href="#" id="desktop-jogos">
+                                 <i class="bi bi-controller"></i> Jogos
+                             </a>
+                         </li>
+                         <li class="nav-item">
+                             <a class="nav-link" href="#" id="desktop-personagens">
+                                 <i class="bi bi-person"></i> Personagens
+                             </a>
+                         </li>
+                         <li class="nav-item">
+                             <a class="nav-link" href="#" id="desktop-guias">
+                                 <i class="bi bi-book"></i> Guias
+                             </a>
+                         </li>
+                          <li class="nav-item">
+                             <a class="nav-link disabled" aria-disabled="true" id="desktop-embreve">
+                                 <i class="bi bi-hourglass-split"></i> Em breve...
+                             </a>
+                         </li>
+                     </ul>
+                 </div>
             </nav>
 
             <main class="col-lg-9 col-xl-10 ms-sm-auto px-md-4 main-content">
@@ -90,5 +90,40 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+    const navLinks = document.querySelectorAll('.nav-link');
+
+    navLinks.forEach(link => {
+        link.addEventListener('click', function(event) {
+            // Remove a classe 'active' de todos os links
+            navLinks.forEach(otherLink => {
+                otherLink.classList.remove('active');
+                otherLink.style.backgroundColor = ''; // Remove o azul de outros links
+            });
+
+            // Adiciona a classe 'active' e define o fundo azul no link clicado
+            this.classList.add('active');
+            this.style.backgroundColor = '#007bff'; // Cor azul do Bootstrap Primary
+            this.style.color = '#fff'; // Texto branco para melhor contraste
+        });
+    });
+
+    // Para manter o "Início" ativo por padrão (se for o caso)
+    const inicioLinkDesktop = document.getElementById('desktop-inicio');
+    if (inicioLinkDesktop && window.innerWidth >= 992) { // Verifica se é desktop
+        inicioLinkDesktop.classList.add('active');
+        inicioLinkDesktop.style.backgroundColor = '#007bff';
+        inicioLinkDesktop.style.color = '#fff';
+    }
+
+    const inicioLinkMobile = document.getElementById('mobile-inicio');
+    if (inicioLinkMobile && window.innerWidth < 992) { // Verifica se é mobile
+        inicioLinkMobile.classList.add('active');
+        inicioLinkMobile.style.backgroundColor = '#007bff';
+        inicioLinkMobile.style.color = '#fff';
+    }
+});
+    </script>
 </body>
 </html>
