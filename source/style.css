@@ -75,6 +75,12 @@ body {
     font-size: 1.2rem; /* Tamanho um pouco maior para o parágrafo */
 }
 
+.carouselExampleAutoplaying{
+    width: 50%;
+    height: 50%;
+    border-radius: 25%;
+}
+
 
 /* Ajustes para telas pequenas onde o menu lateral fixo some */
 @media (max-width: 991.98px) { /* Ponto de quebra 'lg' do Bootstrap */
