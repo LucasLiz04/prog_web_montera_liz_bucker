@@ -75,12 +75,16 @@ body {
     font-size: 1.2rem; /* Tamanho um pouco maior para o parágrafo */
 }
 
-.carouselExampleAutoplaying{
-    width: 50%;
-    height: 50%;
-    border-radius: 25%;
+/* --- Controle do Tamanho das Imagens do Carrossel --- */
+#carouselExampleAutoplaying .carousel-item img {
+    max-height: 500px; /* Defina a altura máxima desejada aqui (ex: 400px, 60vh, etc.) */
+    object-fit: cover; /* Faz a imagem cobrir a área sem distorcer (pode cortar) */
+    object-position: center; /* Centraliza a imagem dentro do espaço, se cortada */
+    border-radius: 40px;
+    max-width: 80%; /* Ou um valor em pixels, ex: 1000px */
+    margin-left: auto;
+    margin-right: auto;
 }
-
 
 /* Ajustes para telas pequenas onde o menu lateral fixo some */
 @media (max-width: 991.98px) { /* Ponto de quebra 'lg' do Bootstrap */
