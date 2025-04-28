@@ -94,8 +94,27 @@
             </nav>
 
             <main class="col-lg-9 col-xl-10 ms-sm-auto px-md-4 main-content">
-                <div class="content-wrapper"> <div class="text-center py-5"> <h1>Seu Perfil</h1>
-                        <p class="lead">Esta aba é onde vamos colocar o perfil, dados e configurações do usuário.</p>
+                <div class="content-wrapper">
+                    <div class="text-center py-5">
+                        <h1>Seu Perfil</h1>
+                        <p class="lead">Gerencie suas informações pessoais e configurações.</p>
+                    </div>
+                    <div class="row justify-content-center">
+                        <div class="col-md-6">
+                            <div class="card shadow-sm">
+                                <div class="card-body text-center">
+                             
+                                    <img src="/images/avatar.png" class="rounded-circle mb-3" style="width: 150px; height: 150px;">
+                            
+                                    <h3 class="card-title">Joao da Silva</h3>
+                           
+                                    <p class="text-muted mb-1">Email: joao_gamer@gmail.com</p>
+                                    <p class="text-muted">Membro desde: Janeiro de 2025</p>
+                             
+                                    <button class="btn btn-primary mt-3" onclick="redefinirSenha()">Redefinir Senha</button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </main>
@@ -105,5 +124,11 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 
     <script src="script.js"></script>
+
+    <script>
+        function redefinirSenha() {
+            alert('Um link para redefinir sua senha foi enviado para o seu e-mail.');
+        }
+    </script>
 </body>
 </html>
