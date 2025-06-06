@@ -1,99 +1,89 @@
 // src/components/Sidebar.jsx
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, BarChart2, Settings, Home, User } from 'react-feather';
-import meuIcone2 from '../assets/taskmaster_logo_monochrome-nobg.png';
+import { NavLink } from 'react-router-dom';
+// Se você instalou react-feather ou react-icons, pode importar os ícones aqui
+// Exemplo com react-feather (se usar):
+// import { Home, Fire, DollarSign, Gaming, Book, MessageSquare, User, Clock } from 'react-feather';
+// Ou com react-icons (se usar, precisaria de imports específicos, e.g. import { FaHome } from 'react-icons/fa';)
 
-const Sidebar = ({ collapsed, onToggle, profileImageUrl }) => {
-  return (
-    <div
-      className={`relative z-40 text-white transition-all duration-300 min-h-screen flex flex-col 
-                  bg-gradient-to-br from-[#D8432D] via-[#7A1B5E] to-[#3F0C56]
-                  ${collapsed ? 'w-[68px] items-center px-1 py-2' : 'w-64 p-4'}`}
-    >
-      <div className={`${collapsed ? 'w-full flex flex-col items-center' : ''}`}>
-        <div className={`mb-4 ${collapsed ? 'flex justify-center w-full' : 'flex justify-end'}`}>
-          <button
-            onClick={onToggle}
-            className="p-2 rounded-lg hover:bg-white/10 transition-colors"
-            title={collapsed ? "Expandir sidebar" : "Recolher sidebar"}
-          >
-            {collapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
-          </button>
-        </div>
+const navItems = [
+    { path: '/', text: 'Início', icon: '🏠' }, // Use o ícone de sua preferência (SVG, react-icons, etc.)
+    { path: '/em-alta', text: 'Em alta', icon: '🔥' },
+    { path: '/promocoes', text: 'Promoções', icon: '💰' },
+    { path: '/jogos', text: 'Jogos', icon: '🎮' },
+    { path: '/guias', text: 'Guias', icon: '📚' },
+    { path: '/bate-papos', text: 'Bate-Papos', icon: '💬' },
+    { path: '/perfil', text: 'Perfil', icon: '👤' },
+    { path: '/em-breve', text: 'Em breve...', icon: '⏳' },
+];
 
-        <div className={`flex items-center min-w-0 mb-4 ${collapsed ? 'justify-center' : 'gap-2'}`}>
-          <img src={meuIcone2} alt="Logo" className={`flex-shrink-0 transition-all duration-300 ${collapsed ? 'w-8 h-8' : 'w-10 h-10'}`} />
-          {!collapsed && (
-            <div className={`overflow-hidden transition-all duration-300 w-auto ml-2`}>
-              <span className={`text-xl font-bold opacity-100`}>TaskMaster</span>
-            </div>
-          )}
-        </div>
+function Sidebar({ isMobileMenuOpen, toggleMobileMenu }) {
+    return (
+        <>
+            {/* Sidebar para Desktop */}
+            <nav className="hidden lg:block w-64 bg-gray-800 p-4 shadow-xl">
+                <h5 className="text-xl font-semibold mb-6 text-gray-300">Game Wiki</h5>
+                <ul className="space-y-3">
+                    {navItems.map((item) => (
+                        <li key={item.path}>
+                            <NavLink
+                                to={item.path}
+                                className={({ isActive }) =>
+                                    `flex items-center space-x-2 p-2 rounded-md transition duration-200 ${item.disabled
+                                        ? 'text-gray-500 cursor-not-allowed'
+                                        : isActive
+                                            ? 'bg-blue-700 text-white'
+                                            : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                                    }`
+                                }
+                                aria-disabled={item.disabled}
+                                onClick={item.disabled ? (e) => e.preventDefault() : undefined}
+                            >
+                                {/* Renderize seu ícone aqui. Ex: <Home size={20} /> ou o emoji do navItems. */}
+                                <span>{item.icon}</span>
+                                <span>{item.text}</span>
+                            </NavLink>
+                        </li>
+                    ))}
+                </ul>
+            </nav>
 
-        {/* Avatar/Foto do Perfil do Usuário */}
-        <Link
-          to="/app/profile"
-          className={`flex items-center rounded-lg cursor-pointer hover:bg-white/10 transition-colors mb-4
-                      ${collapsed ? 'w-12 h-12 p-0 justify-center' : 'p-2 gap-3'}`}
-          title="Perfil do Usuário"
-        >
-          {/* Container do Avatar/Ícone com tamanho fixo */}
-          <div className={`flex-shrink-0 rounded-full flex items-center justify-center 
-                         ${collapsed ? 'w-12 h-12' : 'w-8 h-8'} 
-                         ${profileImageUrl ? '' : 'bg-slate-700/50'}`}> {/* Fundo só para o ícone padrão */}
-            {profileImageUrl ? (
-              <img
-                className="w-full h-full rounded-full object-cover"
-                src={profileImageUrl}
-                alt="Avatar do usuário"
-              />
-            ) : (
-              <User size={collapsed ? 24 : 22} className="text-slate-300" />
-            )}
-          </div>
-
-          {!collapsed && (
-            <span
-              className="text-sm font-medium whitespace-nowrap overflow-hidden ml-3" // Adicionado ml-3 para garantir espaço quando expandido
+            {/* Offcanvas Sidebar para Mobile */}
+            <div
+                className={`fixed inset-y-0 left-0 w-64 bg-gray-800 p-4 shadow-xl z-40 transition-transform duration-300 ease-in-out transform ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
+                    } lg:hidden`}
             >
-              Nome do Usuário
-            </span>
-          )}
-        </Link>
-      </div>
-
-      <nav className={`space-y-1 flex-grow overflow-y-auto custom-scrollbar ${collapsed ? 'w-full' : ''}`}>
-        <SidebarItem icon={<Home size={20} />} label="Minhas tarefas" collapsed={collapsed} to="/app" />
-        <SidebarItem icon={<BarChart2 size={20} />} label="Estatísticas" collapsed={collapsed} to="/app/statistics" />
-        <SidebarItem icon={<Settings size={20} />} label="Configurações" collapsed={collapsed} to="/app/settings" />
-      </nav>
-    </div>
-  );
-};
-
-const SidebarItem = ({ icon, label, collapsed, to = "#" }) => {
-  const location = useLocation();
-  const isActive = location.pathname === to || (to === "/app" && (location.pathname === "/app" || location.pathname === "/app/"));
-
-  return (
-    <Link
-      to={to}
-      className={`flex items-center p-2 rounded-lg cursor-pointer transition-all duration-300
-        ${isActive ? 'bg-white/20' : 'hover:bg-white/10'}
-        ${collapsed ? 'justify-center' : 'justify-start gap-3'}`}
-      title={label}
-    >
-      <div className={`h-6 w-6 flex items-center justify-center flex-shrink-0 ${collapsed && !isActive ? 'text-slate-300' : ''} ${collapsed && isActive ? 'text-white' : ''}`}>
-        {icon}
-      </div>
-      {!collapsed && (
-        <span className="transition-opacity duration-200 whitespace-nowrap overflow-hidden opacity-100 w-auto ml-3">
-          {label}
-        </span>
-      )}
-    </Link>
-  );
-};
+                <div className="flex justify-between items-center mb-6">
+                    <h5 className="text-xl font-semibold text-gray-300">Game Wiki</h5>
+                    <button onClick={toggleMobileMenu} className="text-gray-400 hover:text-white text-2xl leading-none">
+                        &times; {/* Ícone de fechar */}
+                    </button>
+                </div>
+                <ul className="space-y-3">
+                    {navItems.map((item) => (
+                        <li key={item.path}>
+                            <NavLink
+                                to={item.path}
+                                onClick={item.disabled ? (e) => e.preventDefault() : toggleMobileMenu}
+                                className={({ isActive }) =>
+                                    `flex items-center space-x-2 p-2 rounded-md transition duration-200 ${item.disabled
+                                        ? 'text-gray-500 cursor-not-allowed'
+                                        : isActive
+                                            ? 'bg-blue-700 text-white'
+                                            : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                                    }`
+                                }
+                                aria-disabled={item.disabled}
+                            >
+                                <span>{item.icon}</span>
+                                <span>{item.text}</span>
+                            </NavLink>
+                        </li>
+                    ))}
+                </ul>
+            </div>
+        </>
+    );
+}
 
 export default Sidebar;
