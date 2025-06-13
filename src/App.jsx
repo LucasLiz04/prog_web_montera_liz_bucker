@@ -1,55 +1,44 @@
 // src/App.jsx
-import React, { useState } from 'react';
-import { Routes, Route, Outlet } from 'react-router-dom';
-import LoginPage from './components/LoginPage';
-import Header from './components/Header';
-import Sidebar from './components/Sidebar';
-import Main from './components/Main';
-import ProfilePage from './components/ProfilePage';
-import StatisticsPage from './components/StatisticsPage';
-import SettingsPage from './components/SettingsPage';
-import AboutUsPage from './components/AboutUsPage'; // << NOVO IMPORT
+import React from 'react';
+// 1. BrowserRouter foi renomeado para Router para clareza
+//    Outlet e useState foram removidos pois não são mais necessários aqui
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 
-const AppLayout = () => {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
-  const [profileImageUrl, setProfileImageUrl] = useState(null);
+// 2. Remova as importações de todas as páginas e componentes do layout antigo
+//    Ex: import Sidebar from './components/Sidebar';
+//    Ex: import HomePage from './pages/HomePage';
+//    etc...
 
-  const toggleSidebar = () => {
-    setSidebarCollapsed(!sidebarCollapsed);
-  };
+// Importe apenas as páginas que não fazem parte do layout antigo
+import AboutUsPage from './pages/AboutUsPage';
+import LoginPage from './pages/LoginPage';
+import PlatformPage from './pages/PlatformPage';
 
-  return (
-    <div className="flex bg-slate-900 min-h-screen">
-      <Sidebar
-        collapsed={sidebarCollapsed}
-        onToggle={toggleSidebar}
-        profileImageUrl={profileImageUrl}
-      />
-      <div className="flex-1 flex flex-col relative overflow-x-hidden">
-        <Header />
-        <div className="flex-1 overflow-y-auto">
-          <Outlet context={{
-            profileImageUrl, setProfileImageUrl,
-            sidebarCollapsed
-          }} />
-        </div>
-      </div>
-    </div>
-  );
-};
+/**
+ * O componente de Layout Principal (MainLayout) foi completamente removido.
+ */
 
+/**
+ * Componente Principal da Aplicação (simplificado)
+ */
 function App() {
   return (
-    <Routes>
-      <Route path="/" element={<LoginPage />} />
-      <Route path="/about-us" element={<AboutUsPage />} /> {/* << NOVA ROTA ADICIONADA */}
-      <Route path="/app" element={<AppLayout />}>
-        <Route index element={<Main />} />
-        <Route path="profile" element={<ProfilePage />} />
-        <Route path="statistics" element={<StatisticsPage />} />
-        <Route path="settings" element={<SettingsPage />} />
-      </Route>
-    </Routes>
+    <Router>
+      <Routes>
+        {/* Rota principal agora redireciona para a plataforma */}
+        <Route path="/" element={<Navigate to="/platform" replace />} />
+
+        {/* Rotas autônomas que não usam o layout da plataforma */}
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/about-us" element={<AboutUsPage />} />
+
+        {/* A rota da plataforma agora é a principal da aplicação */}
+        {/* O '*' indica que qualquer sub-rota de /platform será gerenciada pelo PlatformPage */}
+        <Route path="/platform/*" element={<PlatformPage />} />
+
+        {/* Todas as rotas do layout antigo foram removidas daqui */}
+      </Routes>
+    </Router>
   );
 }
 
