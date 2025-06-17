@@ -8,7 +8,7 @@ const GuideCard = ({ guide }) => {
             {/* Imagem com overlay */}
             <div className="relative h-40">
                 <img
-                    src={guide.imageUrl}
+                    src={guide.image_url}
                     alt={guide.title}
                     className="w-full h-full object-cover"
                 />

@@ -1,0 +1,41 @@
+# backend/docker-compose.yml
+services:
+  # 1. Serviço do Banco de Dados (sem alterações)
+  db:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_DB: gplatform
+      POSTGRES_USER: gplatform_user
+      POSTGRES_PASSWORD: sua_senha_forte_aqui
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  # 2. Serviço da API PostgREST (sem alterações)
+  api:
+    image: postgrest/postgrest
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      PGRST_DB_URI: postgres://gplatform_user:sua_senha_forte_aqui@db:5432/gplatform
+      PGRST_DB_SCHEMA: api
+      PGRST_DB_ANON_ROLE: web_anon
+    depends_on:
+      - db
+
+  # 3. NOVO SERVIÇO: Servidor de Upload
+  upload-server:
+    build: ./upload-server # Diz ao Docker para construir a imagem a partir da pasta 'upload-server'
+    restart: always
+    ports:
+      - "4000:4000" # Mapeia a porta 4000 para o seu computador
+    volumes:
+      # Garante que a pasta 'uploads' seja persistente e compartilhada
+      - ./uploads:/app/uploads
+
+volumes:
+  postgres_data:

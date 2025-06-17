@@ -1,41 +1,57 @@
 // src/pages/DownloadsPage.jsx
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import ActiveDownload from '../components/ActiveDowload';
 import DownloadListItem from '../components/DowloadListItem';
-import { Settings } from 'react-feather';
-
-// --- DADOS FICTÍCIOS ---
-const activeDownloadData = {
-    title: 'Aseprite',
-    headerUrl: 'https://cdn.akamai.steamstatic.com/steam/apps/431730/header.jpg?t=1667852377',
-    progress: 28, // em porcentagem
-    downloaded: '2,2 MB',
-    totalSize: '7,7 MB',
-    timeRemaining: '18:12',
-};
-
-const unscheduledDownloadsData = [
-    { id: 1, title: 'Brawlhalla', size: '282.8 MB', coverUrl: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co5pue.jpg' },
-    { id: 2, title: 'Grand Theft Auto V Legacy', size: '2.0 GB', coverUrl: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co2p6a.jpg' },
-    { id: 3, title: 'Marvel Rivals', size: '49.6 GB', coverUrl: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co7f9x.jpg' },
-];
-// --- FIM DOS DADOS ---
+import LoadingSpinner from '../components/LoadingSpinner';
+import { BASE_URL } from '../services/api';
 
 const DownloadsPage = () => {
+    const [activeDownload, setActiveDownload] = useState(null);
+    const [unscheduled, setUnscheduled] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+        const fetchDownloads = async () => {
+            try {
+                const [activeRes, unscheduledRes] = await Promise.all([
+                    fetch(`${BASE_URL}/downloads?status=eq.active&limit=1`),
+                    fetch(`${BASE_URL}/downloads?status=eq.unscheduled`)
+                ]);
+
+                if (!activeRes.ok || !unscheduledRes.ok) throw new Error('Failed to fetch downloads data');
+
+                const activeData = await activeRes.json();
+                const unscheduledData = await unscheduledRes.json();
+
+                setActiveDownload(activeData[0] || null); // Pega o primeiro ou define como nulo
+                setUnscheduled(unscheduledData);
+
+            } catch (e) {
+                setError(e.message);
+                console.error("Failed to fetch downloads:", e);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchDownloads();
+    }, []);
+
+    if (loading) return <LoadingSpinner />;
+    if (error) return <div className="text-center text-red-500">Erro ao carregar downloads: {error}</div>;
+
     return (
         <div className="w-full">
-            {/* Download Ativo */}
-            <ActiveDownload game={activeDownloadData} />
+            {activeDownload ? <ActiveDownload game={activeDownload} /> : <div className="text-center p-6 bg-slate-800 rounded-lg text-slate-400">Nenhum download ativo no momento.</div>}
 
-            <div className="border-b border-slate-700 mb-8"></div>
+            <div className="border-b border-slate-700 my-8"></div>
 
-            {/* Downloads não agendados */}
             <div>
                 <h3 className="text-2xl font-bold text-white mb-4">
-                    Não agendados <span className="text-base text-slate-400 font-normal">({unscheduledDownloadsData.length})</span>
+                    Não agendados <span className="text-base text-slate-400 font-normal">({unscheduled.length})</span>
                 </h3>
                 <div className="space-y-2">
-                    {unscheduledDownloadsData.map(game => (
+                    {unscheduled.map(game => (
                         <DownloadListItem key={game.id} game={game} />
                     ))}
                 </div>

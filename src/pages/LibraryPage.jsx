@@ -1,30 +1,41 @@
 // src/pages/LibraryPage.jsx
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { ChevronDown } from 'react-feather';
 import LibraryGameCard from '../components/LibraryGameCard';
-
-// --- Dados Fictícios para a Biblioteca ---
-const myGames = [
-    { id: 1, title: 'Anthem', coverUrl: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1nqy.jpg' },
-    { id: 2, title: 'Call of Duty: Black Ops 4', coverUrl: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1tkv.jpg' },
-    { id: 3, title: 'Sea of Thieves', coverUrl: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1x7d.jpg' },
-    { id: 4, title: 'Battlefield V', coverUrl: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co2l1b.jpg' },
-    { id: 5, title: 'DOTA 2', coverUrl: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co646y.jpg' },
-    { id: 6, title: 'League of Legends', coverUrl: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1vce.jpg' },
-    { id: 7, title: 'Apex Legends', coverUrl: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co5zmg.jpg' },
-    { id: 8, title: 'Fortnite', coverUrl: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co64cf.jpg' },
-    { id: 9, title: "Tom Clancy's The Division 2", coverUrl: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1w2p.jpg' },
-    { id: 10, title: 'Dead by Daylight', coverUrl: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co5pua.jpg' },
-    { id: 11, title: 'PlayerUnknown\'s Battlegrounds', coverUrl: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co5w0w.jpg' },
-    { id: 12, title: 'StarCraft II', coverUrl: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1tmu.jpg' },
-];
-// --- Fim dos Dados Fictícios ---
-
+import LoadingSpinner from '../components/LoadingSpinner';
+import { BASE_URL } from '../services/api';
 
 const LibraryPage = () => {
+    const [games, setGames] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+        const fetchLibraryGames = async () => {
+            try {
+                // Exemplo de endpoint. Peça ao seu amigo o correto.
+                const response = await fetch(`${BASE_URL}/library_games`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                setGames(data);
+            } catch (e) {
+                setError(e.message);
+                console.error("Failed to fetch library games:", e);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchLibraryGames();
+    }, []);
+
+    if (loading) return <LoadingSpinner />;
+    if (error) return <div className="text-center text-red-500">Erro ao carregar a biblioteca: {error}</div>;
+
     return (
         <div className="w-full">
-            {/* Cabeçalho */}
             <header className="flex justify-between items-center mb-8">
                 <h1 className="text-3xl font-bold text-white">Game Library</h1>
                 <div className="flex items-center gap-2">
@@ -36,9 +47,8 @@ const LibraryPage = () => {
                 </div>
             </header>
 
-            {/* Grade de Jogos */}
             <main className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-6 gap-y-8">
-                {myGames.map(game => (
+                {games.map(game => (
                     <LibraryGameCard key={game.id} game={game} />
                 ))}
             </main>

@@ -11,7 +11,7 @@ const teamMembersData = [
     {
         id: 1,
         // Use um serviço como ui-avatars.com ou source.unsplash para placeholders se não tiver fotos
-        photoUrl: `https://ui-avatars.com/api/?name=Joao+Pedro&background=D8432D&color=fff&size=128&font-size=0.33&bold=true`,
+        photoUrl: `https://ui-avatars.com/api/?name=Joao+Pedro&background=50A6D9&color=fff&size=128&font-size=0.33&bold=true`,
         name: 'João Pedro Martins Montera',
         course: 'Sistemas de Informação - 5º Semestre - UFMS',
         role: 'Desenvolvedor Front-End ',
@@ -25,7 +25,7 @@ const teamMembersData = [
     },
     {
         id: 2,
-        photoUrl: `https://ui-avatars.com/api/?name=Lucas+Rocha&background=7A1B5E&color=fff&size=128&font-size=0.33&bold=true`,
+        photoUrl: `https://ui-avatars.com/api/?name=Lucas+Rocha&background=0653AF&color=fff&size=128&font-size=0.33&bold=true`,
         name: 'Lucas Rocha Liz',
         course: 'Sistemas de Informação - 5º Semestre - UFMS',
         role: 'Desenvolvedor Back-End',
@@ -39,7 +39,7 @@ const teamMembersData = [
     },
     {
         id: 3,
-        photoUrl: `https://ui-avatars.com/api/?name=Anderson+Bucker&background=7A1B5E&color=fff&size=128&font-size=0.33&bold=true`,
+        photoUrl: `https://ui-avatars.com/api/?name=Anderson+Bucker&background=020F55&color=fff&size=128&font-size=0.33&bold=true`,
         name: 'Anderson Bucker Nunes',
         course: 'Sistemas de Informação - 5º Semestre - UFMS',
         role: 'Designer',
@@ -71,7 +71,7 @@ const AboutUsPage = () => {
                 <div className="flex items-center mb-10 relative">
 
                     <div className="center flex-col items-center text-center"> {/* Centraliza título e ícone */}
-                        <Users size={40} className="text-orange-600 mb-2" />
+                        <Users size={40} className="text-[#0653AF] mb-2" />
                         <h1 className="text-3xl sm:text-4xl font-bold text-slate-100">
                             Nossa Equipe
                         </h1>
@@ -103,7 +103,7 @@ const AboutUsPage = () => {
                 <div className="text-center mt-12">
                     <button
                         onClick={() => navigate('/')}
-                        className="bg-gradient-to-br from-[#D8432D] via-[#f09348] to-[#fed405] text-white font-medium py-2.5 px-6 rounded-lg transition-colors hover:border-r-purple-800"
+                        className="bg-gradient-to-br from-[#50A6D9] via-[#0653AF] to-[#020F55] text-white font-medium py-2.5 px-6 rounded-lg transition-all duration-300 ease-in-out hover:scale-105 hover:border-r-purple-800"
                     >
                         Voltar para a Página Inicial
                     </button>
