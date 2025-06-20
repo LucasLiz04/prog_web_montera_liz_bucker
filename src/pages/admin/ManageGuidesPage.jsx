@@ -6,12 +6,17 @@ import LoadingSpinner from '../../components/LoadingSpinner';
 import { BASE_URL } from '../../services/api';
 import { Edit, Trash2 } from 'react-feather';
 
+
 const ManageGuidesPage = () => {
     const [guides, setGuides] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
+    //estado para guardar o guia que esta sendo editado
+    const [editingGuide, setEditingGuide] = useState(null)
+
+    //busca os guias na api
     const fetchGuides = async () => {
         setLoading(true);
         try {
@@ -30,9 +35,47 @@ const ManageGuidesPage = () => {
         fetchGuides();
     }, []);
 
-    const handleGuideCreated = () => {
+
+    //1 - função para abrir o modal de edição de guias
+    const handleCreate = () => {
+        setEditingGuide(null); //garante que nenhum guia esta em edição
+        setIsModalOpen(true);
+    }
+
+    //2 - função para abrir o modal de edição de guias
+    const handleEdit = (guide) => {
+        setEditingGuide(guide); //define o guia a ser editado
+        setIsModalOpen(true);
+    };
+
+    //3 - função para atualizar a lista exibida atualizar um guia
+    const handleGuideSaved = () => {
         setIsModalOpen(false);
-        fetchGuides();
+        setEditingGuide(null); //limpa estado de edição
+        fetchGuides(); //recarrega a lista de guias
+    };
+
+    //5 função para deletar um guia
+    const handleDelete = async (guideId) => {
+        const guideTitle = guides.find(g => g.id === guideId)?.title || 'este guia';
+        if (window.confirm(`Tem certeza que deseja excluir "${guideTitle}"?`)) {
+            try {
+                const response = await fetch(`${BASE_URL}/guides?id=eq.${guideId}`, {
+                    method: 'DELETE',
+                });
+
+                if (!response.ok) {
+                    throw new Error('Falha ao deletar o guia.');
+                }
+
+                // Remove o guia da lista local para atualizar a UI instantaneamente
+                setGuides(guides.filter(guide => guide.id !== guideId));
+
+            } catch (e) {
+                setError(e.message);
+                alert(`Erro ao deletar: ${e.message}`);
+            }
+        }
     };
 
     return (
@@ -40,7 +83,7 @@ const ManageGuidesPage = () => {
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-3xl font-bold">Gerenciar Guias</h1>
                 <button
-                    onClick={() => setIsModalOpen(true)}
+                    onClick={handleCreate} // Alterado para a nova função
                     className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md"
                 >
                     Adicionar Novo Guia
@@ -71,8 +114,9 @@ const ManageGuidesPage = () => {
                                 <td className="px-6 py-4 text-sm text-slate-300">{guide.author}</td>
                                 <td className="px-6 py-4 text-sm text-slate-300">{guide.type}</td>
                                 <td className="px-6 py-4 text-right text-sm space-x-2">
-                                    <button className="text-sky-400 hover:text-sky-300 p-1"><Edit size={18} /></button>
-                                    <button className="text-red-500 hover:text-red-400 p-1"><Trash2 size={18} /></button>
+                                    {/* 6. Botões conectados às funções */}
+                                    <button onClick={() => handleEdit(guide)} className="text-sky-400 hover:text-sky-300 p-1"><Edit size={18} /></button>
+                                    <button onClick={() => handleDelete(guide.id)} className="text-red-500 hover:text-red-400 p-1"><Trash2 size={18} /></button>
                                 </td>
                             </tr>
                         ))}
@@ -80,8 +124,19 @@ const ManageGuidesPage = () => {
                 </table>
             </div>
 
-            <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Adicionar Novo Guia">
-                <CreateGuideForm onGuideCreated={handleGuideCreated} />
+            {/* 7. Modal e Formulário adaptados */}
+            <Modal
+                isOpen={isModalOpen}
+                onClose={() => {
+                    setIsModalOpen(false);
+                    setEditingGuide(null); // Limpa o estado de edição ao fechar
+                }}
+                title={editingGuide ? "Editar Guia" : "Adicionar Novo Guia"}
+            >
+                <CreateGuideForm
+                    onGuideSaved={handleGuideSaved}
+                    guideToEdit={editingGuide}
+                />
             </Modal>
         </div>
     );

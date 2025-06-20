@@ -1,37 +1,39 @@
 // src/pages/TrendingPage.jsx
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import TrendingTopic from '../components/TrendingTopic';
 import { TrendingUp } from 'react-feather';
-import LoadingSpinner from '../components/LoadingSpinner';
-import { BASE_URL } from '../services/api';
+
+// --- DADOS FICTÍCIOS ---
+const trendingData = [
+    // O primeiro item será o nosso destaque principal
+    {
+        id: 1,
+        title: "Novo Lançamento: Doom The Dark Ages",
+        description: "O tão esperado Doom The Dark Ages finalmente chegou! Confira nossas primeiras impressões, guias iniciais e participe da discussão.",
+        imageUrl: "./src/images/DOOM_TheDarkAges_Standard_Keyart.webp",
+        category: "Lançamento",
+        stat: "25.8k menções"
+    },
+    {
+        id: 2,
+        title: "Discussão Quente: Final de Cyberpunk 2.0",
+        imageUrl: "./src/images/cyberpunk-recebe-atualizacao-2.2-912x569.webp",
+        category: "Comunidade",
+        stat: "15.2k Posts no Fórum"
+    },
+    {
+        id: 3,
+        title: "Polêmica: Clash Royale e suas mudanças",
+        imageUrl: "./src/images/polemica.jpg",
+        category: "Notícia",
+        stat: "Trending em Portais de Notícias"
+    },
+];
+// --- FIM DOS DADOS ---
 
 const TrendingPage = () => {
-    const [topics, setTopics] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-
-    useEffect(() => {
-        const fetchTrending = async () => {
-            try {
-                const response = await fetch(`${BASE_URL}/trending_topics?order=rank.asc`);
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                const data = await response.json();
-                setTopics(data);
-            } catch (e) {
-                setError(e.message);
-                console.error("Failed to fetch trending topics:", e);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchTrending();
-    }, []);
-
-    if (loading) return <LoadingSpinner />;
-    if (error) return <div className="text-center text-red-500">Erro ao carregar tópicos em alta: {error}</div>;
-    if (!topics || topics.length === 0) return <div className="text-center text-slate-400">Nenhum tópico em alta no momento.</div>
-
-    const [mainTopic, ...otherTopics] = topics;
+    // Separa o tópico principal do resto da lista
+    const [mainTopic, ...otherTopics] = trendingData;
 
     return (
         <div className="w-full">
@@ -41,6 +43,7 @@ const TrendingPage = () => {
             </header>
 
             <main className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Coluna Principal (Tópico em Destaque) */}
                 <div className="lg:col-span-2">
                     <a href="#" className="block rounded-2xl overflow-hidden group relative shadow-lg">
                         <img src={mainTopic.imageUrl} alt={mainTopic.title} className="w-full h-96 object-cover transition-transform duration-300 group-hover:scale-105" />
@@ -53,6 +56,7 @@ const TrendingPage = () => {
                     </a>
                 </div>
 
+                {/* Coluna Secundária (Outros Tópicos) */}
                 <div className="lg:col-span-1 flex flex-col gap-4">
                     {otherTopics.map((topic, index) => (
                         <TrendingTopic key={topic.id} topic={topic} rank={index + 2} />

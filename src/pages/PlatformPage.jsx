@@ -13,9 +13,11 @@ import FriendsPage from './FriendsPage';
 import DownloadsPage from './DownloadsPage';
 import BuysPage from './BuysPage';
 import WishlistPage from './WishlistPage';
-import BatePaposPage from './BatePaposPage'; // 1. Importe a página
+import BatePaposPage from './BatePaposPage';
 import TrendingPage from './TrendingPage';
 import GuiasPlatformPage from './GuiasPlatformPage';
+// Importe a nova página de detalhes
+import GameDetailPage from './GameDetailPage';
 
 function PlatformPage() {
   return (
@@ -24,13 +26,17 @@ function PlatformPage() {
       <main className="flex-1 p-6 lg:p-8 overflow-y-auto custom-scrollbar">
         <Routes>
           <Route index element={<MainContent />} />
+
+          {/* Nova rota dinâmica para os detalhes do jogo */}
+          <Route path="game/:slug" element={<GameDetailPage />} />
+
           <Route path="em-alta" element={<TrendingPage />} />
           <Route path="category" element={<CatalogPage />} />
           <Route path="library" element={<LibraryPage />} />
           <Route path="profile/:username" element={<UserProfilePage />} />
           <Route path="friends" element={<FriendsPage />} />
           <Route path="bate-papos" element={<BatePaposPage />} />
-          <Route path="guias" element={<GuiasPlatformPage />} /> {/* 2. Adicione a nova rota */}
+          <Route path="guias" element={<GuiasPlatformPage />} />
           <Route path="downloads" element={<DownloadsPage />} />
           <Route path="buys" element={<BuysPage />} />
           <Route path="wishlist" element={<WishlistPage />} />

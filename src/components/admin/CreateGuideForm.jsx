@@ -1,19 +1,41 @@
 // src/components/admin/CreateGuideForm.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { BASE_URL } from '../../services/api';
 
-const CreateGuideForm = ({ onGuideCreated }) => {
-    const { register, handleSubmit, formState: { errors }, reset } = useForm();
+// 1. O componente agora aceita as props onGuideSaved e guideToEdit
+const CreateGuideForm = ({ onGuideSaved, guideToEdit }) => {
+    // 2. Determina se o formulário está em modo de edição
+    const isEditMode = Boolean(guideToEdit);
+
+    const { register, handleSubmit, formState: { errors }, reset, setValue } = useForm();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [message, setMessage] = useState('');
+
+    // 3. useEffect para preencher o formulário quando estiver em modo de edição
+    useEffect(() => {
+        if (isEditMode && guideToEdit) {
+            // Preenche cada campo do formulário com os dados do guia
+            setValue('title', guideToEdit.title);
+            setValue('author', guideToEdit.author);
+            setValue('link', guideToEdit.link);
+            setValue('type', guideToEdit.type);
+            // Converte o array de tags em uma string separada por vírgula
+            setValue('tags', guideToEdit.tags.join(', '));
+            // Extrai apenas o nome do arquivo da URL da imagem
+            setValue('imageFilename', guideToEdit.image_url.split('/').pop());
+        } else {
+            // Limpa o formulário se não estiver em modo de edição
+            reset();
+        }
+    }, [isEditMode, guideToEdit, setValue, reset]);
 
     const onSubmit = async (data) => {
         setIsSubmitting(true);
         setMessage('');
 
         try {
-            // Converte a string de tags (separada por vírgula) em um array de texto para o PostgreSQL
+            // Converte a string de tags em um array de texto para o PostgreSQL
             const tagsArray = data.tags.split(',').map(tag => tag.trim()).filter(tag => tag);
 
             const guideDataToSave = {
@@ -21,23 +43,35 @@ const CreateGuideForm = ({ onGuideCreated }) => {
                 author: data.author,
                 type: data.type,
                 link: data.link,
-                image_url: `/images/${data.imageFilename}`, // Usando o método da pasta /public
+                image_url: `/images/${data.imageFilename}`,
                 tags: `{${tagsArray.join(',')}}`, // Formato de array do PostgreSQL
             };
 
-            const response = await fetch(`${BASE_URL}/guides`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(guideDataToSave),
-            });
+            let response;
+            // 4. Lógica de envio diferente para criar e editar
+            if (isEditMode) {
+                // MODO EDIÇÃO: Usa o método PATCH e a URL com o ID do guia
+                response = await fetch(`${BASE_URL}/guides?id=eq.${guideToEdit.id}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(guideDataToSave),
+                });
+                if (!response.ok) throw new Error('Falha ao atualizar o guia.');
 
-            if (!response.ok) {
-                throw new Error('Falha ao criar o guia. Status: ' + response.status);
+            } else {
+                // MODO CRIAÇÃO: Usa o método POST
+                response = await fetch(`${BASE_URL}/guides`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(guideDataToSave),
+                });
+                if (!response.ok) throw new Error('Falha ao criar o guia.');
             }
 
-            setMessage('Guia criado com sucesso!');
+            setMessage(isEditMode ? 'Guia atualizado com sucesso!' : 'Guia criado com sucesso!');
             reset();
-            if (onGuideCreated) onGuideCreated();
+            // A props agora se chama onGuideSaved
+            if (onGuideSaved) onGuideSaved();
 
         } catch (error) {
             setMessage(`Erro: ${error.message}`);
@@ -75,8 +109,10 @@ const CreateGuideForm = ({ onGuideCreated }) => {
                 <label htmlFor="imageFilename" className="block text-sm font-medium text-slate-300">Nome do Arquivo da Imagem</label>
                 <input type="text" placeholder="ex: platina1.png" {...register('imageFilename')} className="mt-1 block w-full bg-slate-700 border-slate-600 rounded-md" />
             </div>
+
+            {/* O texto do botão muda de acordo com o modo */}
             <button type="submit" disabled={isSubmitting} className="w-full bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-4 rounded-md">
-                {isSubmitting ? 'Salvando...' : 'Salvar Guia'}
+                {isSubmitting ? 'Salvando...' : (isEditMode ? 'Salvar Alterações' : 'Salvar Guia')}
             </button>
             {message && <p className="text-center mt-2">{message}</p>}
         </form>

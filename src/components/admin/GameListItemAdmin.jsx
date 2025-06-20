@@ -1,21 +1,19 @@
 // src/components/admin/GameListItemAdmin.jsx
 import React from 'react';
 import { Edit, Trash2 } from 'react-feather';
+import { useNavigate } from 'react-router-dom';
 
-const GameListItemAdmin = ({ game }) => {
-    // Função para deletar (exemplo)
-    const handleDelete = () => {
-        if (window.confirm(`Tem certeza que deseja excluir o jogo "${game.title}"?`)) {
-            // Aqui você faria a chamada DELETE para a API
-            // fetch(`${BASE_URL}/games?id=eq.${game.id}`, { method: 'DELETE' });
-            console.log(`Deletando jogo com ID: ${game.id}`);
-        }
+const GameListItemAdmin = ({ game, onDelete }) => {
+    const navigate = useNavigate();
+
+    const handleEdit = () => {
+        navigate(`/admin/edit-game/${game.id}`);
     };
 
     return (
         <div className="flex items-start gap-4 p-4 rounded-lg bg-slate-900 border border-slate-700">
             <img
-                src={game.coverUrl || 'https://via.placeholder.com/100x120'}
+                src={game.cover_url || 'https://via.placeholder.com/100x120'}
                 alt={game.title}
                 className="w-24 h-32 object-cover rounded-md flex-shrink-0"
             />
@@ -27,11 +25,11 @@ const GameListItemAdmin = ({ game }) => {
                 </div>
             </div>
             <div className="flex flex-col items-center gap-2">
-                <button className="w-full flex justify-center items-center gap-2 bg-sky-600/50 hover:bg-sky-600 text-white text-sm font-semibold py-2 px-3 rounded-md transition-colors">
+                <button onClick={handleEdit} className="w-full flex justify-center items-center gap-2 bg-sky-600/50 hover:bg-sky-600 text-white text-sm font-semibold py-2 px-3 rounded-md transition-colors">
                     <Edit size={16} />
                     <span>Editar</span>
                 </button>
-                <button onClick={handleDelete} className="w-full flex justify-center items-center gap-2 bg-red-600/50 hover:bg-red-600 text-white text-sm font-semibold py-2 px-3 rounded-md transition-colors">
+                <button onClick={onDelete} className="w-full flex justify-center items-center gap-2 bg-red-600/50 hover:bg-red-600 text-white text-sm font-semibold py-2 px-3 rounded-md transition-colors">
                     <Trash2 size={16} />
                     <span>Excluir</span>
                 </button>

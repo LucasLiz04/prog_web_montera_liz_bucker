@@ -4,48 +4,50 @@ import { ChevronLeft, ChevronRight } from 'react-feather';
 
 // Componentes
 import HeroCarousel from './HeroCarousel';
-import PlatformCard from './PlatformCard'; // Card adaptado
+import PlatformCard from './PlatformCard';
 
-// Dados de exemplo (no futuro, viriam de uma API)
+// Dados de exemplo atualizados com 'slug'
 const trendingGames = [
     {
         id: 1,
+        slug: 'death-stranding-2',
         imageSrc: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co4j5w.png',
         title: 'Death Stranding 2',
-        description: 'Death Stranding 2: On The Beach is an upcoming 2028 action-adventure game developed by Kojima Productions',
-        price: '$79.00',
+        description: 'Um novo jogo de ação e aventura desenvolvido pela Kojima Productions.',
+        price: 'R$ 299,90',
     },
     {
         id: 2,
+        slug: 'doom-the-dark-ages',
         imageSrc: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co6mxf.png',
         title: 'Doom: The Dark Ages',
-        description: 'Doom: The Dark Ages is an upcoming first-person shooter game developed by id Software',
-        price: '$62.00',
+        description: 'Um novo jogo de tiro em primeira pessoa desenvolvido pela id Software.',
+        price: 'R$ 249,50',
         isSale: true,
     },
     {
         id: 3,
-        imageSrc: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co294l.png',
-        title: 'Ghost of Yōtei',
-        description: 'Ghost of Yōtei is an upcoming action-adventure game developed by Sucker Punch Productions',
-        price: '$55.00',
+        slug: 'the-witcher-3-wild-hunt',
+        imageSrc: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1wz4.jpg',
+        title: 'The Witcher 3',
+        description: 'Cace monstros, explore terras e mude o destino do mundo.',
+        price: 'R$ 199,90',
     },
     {
         id: 4,
-        imageSrc: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1x9f.png',
+        slug: 'the-outer-worlds-2',
+        imageSrc: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co3g54.jpg',
         title: 'The Outer Worlds 2',
-        description: 'The Outer Worlds 2 is an upcoming action role-playing game developed by Obsidian Entertainment',
-        price: '$35.00',
+        description: 'Um novo RPG de ação e ficção científica desenvolvido pela Obsidian Entertainment.',
+        price: 'R$ 279,00',
     },
 ];
 
 function MainContent() {
     return (
         <div className="w-full">
-            {/* Carrossel em Destaque */}
             <HeroCarousel />
 
-            {/* Seção "Trending Now" */}
             <div className="mt-10">
                 <div className="flex justify-between items-center mb-4">
                     <h3 className="text-2xl font-bold">Trending now</h3>
@@ -63,6 +65,7 @@ function MainContent() {
                     {trendingGames.map(game => (
                         <PlatformCard
                             key={game.id}
+                            slug={game.slug} // Passa o slug para o card
                             imageSrc={game.imageSrc}
                             title={game.title}
                             description={game.description}

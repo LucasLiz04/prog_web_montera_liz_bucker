@@ -25,7 +25,7 @@ const TeamMemberCard = ({ photoUrl, name, course, role, socialLinks }) => {
                 className="w-32 h-32 rounded-full object-cover mb-4 border-4 border-slate-600 shadow-md"
             />
             <h3 className="text-xl font-semibold text-slate-100 mb-1">{name}</h3>
-            <p className="text-[#0653AF] text-sm mb-1 font-medium h-10 flex items-center justify-center">{role}</p>
+            <p className="text-[#50A6D9] text-sm mb-1 font-medium h-10 flex items-center justify-center">{role}</p>
             <p className="text-slate-400 text-xs mb-4 h-8 flex items-center justify-center">{course}</p>
 
             <div className="flex space-x-5 mt-auto pt-4 border-t border-slate-700 w-full justify-center">

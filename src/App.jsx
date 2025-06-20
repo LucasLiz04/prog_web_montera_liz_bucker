@@ -13,9 +13,10 @@ import PlatformPage from './pages/PlatformPage';
 // Páginas de Admin
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import ManageGamesPage from './pages/admin/ManageGamesPage';
-import ManageUsersPage from './pages/admin/ManageUsersPage'; // 1. Importe a página de usuários
+import ManageUsersPage from './pages/admin/ManageUsersPage';
 import ManageGuidesPage from './pages/admin/ManageGuidesPage';
-import SettingsPage from './pages/admin/SettingsPage';     // 2. Importe a página de configurações
+import SettingsPage from './pages/admin/SettingsPage';
+import EditGamePage from './pages/admin/EditGamePage'; // Importe a nova página
 
 
 function App() {
@@ -28,11 +29,13 @@ function App() {
         <Route path="/about-us" element={<AboutUsPage />} />
         <Route path="/platform/*" element={<PlatformPage />} />
 
-        {/* Novas Rotas da Seção de Admin */}
+        {/* Rotas da Seção de Admin */}
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<AdminDashboardPage />} />
           <Route path="manage-games" element={<ManageGamesPage />} />
-          <Route path="manage-guides" element={<ManageGuidesPage />} /> {/* 2. Adicione a nova rota */}
+          {/* Nova rota para editar um jogo específico */}
+          <Route path="edit-game/:id" element={<EditGamePage />} />
+          <Route path="manage-guides" element={<ManageGuidesPage />} />
           <Route path="manage-users" element={<ManageUsersPage />} />
           <Route path="settings" element={<SettingsPage />} />
         </Route>

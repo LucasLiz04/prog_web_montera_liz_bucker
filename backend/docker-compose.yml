@@ -1,6 +1,6 @@
 # backend/docker-compose.yml
 services:
-  # 1. Serviço do Banco de Dados (sem alterações)
+  # 1. Serviço do Banco de Dados (com healthcheck)
   db:
     image: postgres:15
     restart: always
@@ -12,9 +12,17 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      # Usamos prefixos numéricos para garantir a ordem de execução dos scripts
+      - ./init.sql:/docker-entrypoint-initdb.d/10-init.sql
+      - ./populate_data.sql:/docker-entrypoint-initdb.d/20-populate-data.sql
+    # ADICIONADO: Garante que o serviço está saudável antes de outros dependerem dele
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gplatform_user -d gplatform"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
-  # 2. Serviço da API PostgREST (sem alterações)
+  # 2. Serviço da API PostgREST (agora espera pelo healthcheck)
   api:
     image: postgrest/postgrest
     restart: always
@@ -24,17 +32,18 @@ services:
       PGRST_DB_URI: postgres://gplatform_user:sua_senha_forte_aqui@db:5432/gplatform
       PGRST_DB_SCHEMA: api
       PGRST_DB_ANON_ROLE: web_anon
+    # MODIFICADO: depends_on agora espera a condição 'service_healthy'
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
-  # 3. NOVO SERVIÇO: Servidor de Upload
+  # 3. Serviço de Upload (sem alterações)
   upload-server:
-    build: ./upload-server # Diz ao Docker para construir a imagem a partir da pasta 'upload-server'
+    build: ./upload-server
     restart: always
     ports:
-      - "4000:4000" # Mapeia a porta 4000 para o seu computador
+      - "4000:4000"
     volumes:
-      # Garante que a pasta 'uploads' seja persistente e compartilhada
       - ./uploads:/app/uploads
 
 volumes:

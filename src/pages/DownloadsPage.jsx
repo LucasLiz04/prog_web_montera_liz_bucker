@@ -1,44 +1,27 @@
 // src/pages/DownloadsPage.jsx
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import ActiveDownload from '../components/ActiveDowload';
 import DownloadListItem from '../components/DowloadListItem';
-import LoadingSpinner from '../components/LoadingSpinner';
-import { BASE_URL } from '../services/api';
+
+// Dados Fictícios
+const mockActiveDownload = {
+    id: 1,
+    name: 'The Last of Us Part I',
+    coverUrl: 'https://via.placeholder.com/150/556B2F/FFFFFF',
+    progress: 75,
+    speed: '15.8 MB/s',
+    timeLeft: '12 min'
+};
+
+const mockUnscheduled = [
+    { id: 2, name: 'Red Dead Redemption 2', coverUrl: 'https://via.placeholder.com/100/A52A2A/FFFFFF' },
+    { id: 3, name: 'Stray', coverUrl: 'https://via.placeholder.com/100/2E8B57/FFFFFF' },
+];
 
 const DownloadsPage = () => {
-    const [activeDownload, setActiveDownload] = useState(null);
-    const [unscheduled, setUnscheduled] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-
-    useEffect(() => {
-        const fetchDownloads = async () => {
-            try {
-                const [activeRes, unscheduledRes] = await Promise.all([
-                    fetch(`${BASE_URL}/downloads?status=eq.active&limit=1`),
-                    fetch(`${BASE_URL}/downloads?status=eq.unscheduled`)
-                ]);
-
-                if (!activeRes.ok || !unscheduledRes.ok) throw new Error('Failed to fetch downloads data');
-
-                const activeData = await activeRes.json();
-                const unscheduledData = await unscheduledRes.json();
-
-                setActiveDownload(activeData[0] || null); // Pega o primeiro ou define como nulo
-                setUnscheduled(unscheduledData);
-
-            } catch (e) {
-                setError(e.message);
-                console.error("Failed to fetch downloads:", e);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchDownloads();
-    }, []);
-
-    if (loading) return <LoadingSpinner />;
-    if (error) return <div className="text-center text-red-500">Erro ao carregar downloads: {error}</div>;
+    // A lógica de fetch foi removida.
+    const activeDownload = mockActiveDownload;
+    const unscheduled = mockUnscheduled;
 
     return (
         <div className="w-full">
