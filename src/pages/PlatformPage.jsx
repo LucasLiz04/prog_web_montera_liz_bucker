@@ -14,23 +14,21 @@ import DownloadsPage from './DownloadsPage';
 import BuysPage from './BuysPage';
 import WishlistPage from './WishlistPage';
 import BatePaposPage from './BatePaposPage';
-import TrendingPage from './TrendingPage';
 import GuiasPlatformPage from './GuiasPlatformPage';
-// Importe a nova página de detalhes
 import GameDetailPage from './GameDetailPage';
+import PurchaseConfirmPage from './PurchaseConfirmPage';
 
 function PlatformPage() {
   return (
-    <div className="flex bg-[#181a20] text-white min-h-screen font-sans">
+    <div className="flex bg-[#181a20] text-white h-screen overflow-hidden font-sans">
       <Sidebar />
       <main className="flex-1 p-6 lg:p-8 overflow-y-auto custom-scrollbar">
         <Routes>
-          <Route index element={<MainContent />} />
+          <Route index element={<MainContent />} /> {/* A rota principal carrega o MainContent */}
 
-          {/* Nova rota dinâmica para os detalhes do jogo */}
           <Route path="game/:slug" element={<GameDetailPage />} />
+          <Route path="buy/:slug" element={<PurchaseConfirmPage />} />
 
-          <Route path="em-alta" element={<TrendingPage />} />
           <Route path="category" element={<CatalogPage />} />
           <Route path="library" element={<LibraryPage />} />
           <Route path="profile/:username" element={<UserProfilePage />} />
@@ -42,7 +40,7 @@ function PlatformPage() {
           <Route path="wishlist" element={<WishlistPage />} />
         </Routes>
       </main>
-      <aside className="hidden lg:block w-72 bg-[#1f2128] p-4 border-l border-gray-700/50">
+      <aside className="hidden lg:block w-72 bg-[#1f2128] p-4 border-l border-gray-700/50 overflow-y-auto custom-scrollbar">
         <FriendsList />
       </aside>
     </div>

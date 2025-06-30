@@ -1,13 +1,15 @@
 // src/components/admin/AdminSidebar.jsx
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-// CORREÇÃO: Adicione 'BookOpen' à lista de importação.
-import { Home, Grid, Users, Settings, BookOpen } from 'react-feather';
+// ADICIONE O ÍCONE 'Tag' À IMPORTAÇÃO
+import { Home, Grid, Users, Settings, BookOpen, Tag } from 'react-feather';
 
 const navLinks = [
     { icon: <Home size={20} />, text: 'Dashboard', path: '/admin' },
     { icon: <Grid size={20} />, text: 'Gerenciar Jogos', path: '/admin/manage-games' },
     { icon: <BookOpen size={20} />, text: 'Gerenciar Guias', path: '/admin/manage-guides' },
+    // ADICIONE A NOVA LINHA AQUI
+    { icon: <Tag size={20} />, text: 'Gerenciar Categorias', path: '/admin/manage-categories' },
     { icon: <Users size={20} />, text: 'Gerenciar Usuários', path: '/admin/manage-users' },
     { icon: <Settings size={20} />, text: 'Configurações', path: '/admin/settings' },
 ];

@@ -6,24 +6,35 @@ import LoadingSpinner from '../../components/LoadingSpinner';
 import { BASE_URL } from '../../services/api';
 import { Edit, Trash2 } from 'react-feather';
 
-
 const ManageGuidesPage = () => {
     const [guides, setGuides] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [editingGuide, setEditingGuide] = useState(null);
+    const [allCategories, setAllCategories] = useState([]);
 
-    //estado para guardar o guia que esta sendo editado
-    const [editingGuide, setEditingGuide] = useState(null)
-
-    //busca os guias na api
-    const fetchGuides = async () => {
+    const fetchData = async () => {
         setLoading(true);
+        setError(null);
         try {
-            const response = await fetch(`${BASE_URL}/guides?order=id.desc`);
-            if (!response.ok) throw new Error('Falha ao buscar os guias.');
-            const data = await response.json();
-            setGuides(data);
+            const headers = { 'ngrok-skip-browser-warning': 'true' };
+
+            // CORREÇÃO: Usando o nome correto da função 'fn_listar_todos_guias'
+            const guidesPromise = fetch(`${BASE_URL}/rpc/fn_listar_todos_guias`, { method: 'GET', headers: headers });
+            const categoriesPromise = fetch(`${BASE_URL}/rpc/fn_listar_categorias`, { method: 'GET', headers: headers });
+
+            const [guidesResponse, categoriesResponse] = await Promise.all([guidesPromise, categoriesPromise]);
+
+            if (!guidesResponse.ok) throw new Error('A API para listar guias falhou.');
+            if (!categoriesResponse.ok) throw new Error('Falha ao buscar as categorias.');
+
+            const guidesData = await guidesResponse.json();
+            const categoriesData = await categoriesResponse.json();
+
+            setGuides(guidesData);
+            setAllCategories(categoriesData);
+
         } catch (e) {
             setError(e.message);
         } finally {
@@ -32,48 +43,50 @@ const ManageGuidesPage = () => {
     };
 
     useEffect(() => {
-        fetchGuides();
+        fetchData();
     }, []);
 
-
-    //1 - função para abrir o modal de edição de guias
     const handleCreate = () => {
-        setEditingGuide(null); //garante que nenhum guia esta em edição
-        setIsModalOpen(true);
-    }
-
-    //2 - função para abrir o modal de edição de guias
-    const handleEdit = (guide) => {
-        setEditingGuide(guide); //define o guia a ser editado
+        setEditingGuide(null);
         setIsModalOpen(true);
     };
 
-    //3 - função para atualizar a lista exibida atualizar um guia
+    const handleEdit = (guide) => {
+        setEditingGuide(guide);
+        setIsModalOpen(true);
+    };
+
     const handleGuideSaved = () => {
         setIsModalOpen(false);
-        setEditingGuide(null); //limpa estado de edição
-        fetchGuides(); //recarrega a lista de guias
+        setEditingGuide(null);
+        fetchData();
     };
 
-    //5 função para deletar um guia
     const handleDelete = async (guideId) => {
-        const guideTitle = guides.find(g => g.id === guideId)?.title || 'este guia';
-        if (window.confirm(`Tem certeza que deseja excluir "${guideTitle}"?`)) {
+        const guideToDelete = guides.find(g => g.id === guideId);
+        if (window.confirm(`Tem certeza que deseja excluir o guia "${guideToDelete?.titulo}"?`)) {
             try {
-                const response = await fetch(`${BASE_URL}/guides?id=eq.${guideId}`, {
-                    method: 'DELETE',
+                const headers = {
+                    'Content-Type': 'application/json',
+                    'ngrok-skip-browser-warning': 'true'
+                };
+                const body = { id_guia_input: guideId };
+
+                const response = await fetch(`${BASE_URL}/rpc/fn_excluir_guia`, {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify(body)
                 });
 
                 if (!response.ok) {
-                    throw new Error('Falha ao deletar o guia.');
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'Falha ao excluir o guia.');
                 }
 
-                // Remove o guia da lista local para atualizar a UI instantaneamente
-                setGuides(guides.filter(guide => guide.id !== guideId));
-
-            } catch (e) {
-                setError(e.message);
-                alert(`Erro ao deletar: ${e.message}`);
+                alert('Guia excluído com sucesso!');
+                fetchData();
+            } catch (error) {
+                alert(`Erro: ${error.message}`);
             }
         }
     };
@@ -83,7 +96,7 @@ const ManageGuidesPage = () => {
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-3xl font-bold">Gerenciar Guias</h1>
                 <button
-                    onClick={handleCreate} // Alterado para a nova função
+                    onClick={handleCreate}
                     className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md"
                 >
                     Adicionar Novo Guia
@@ -103,18 +116,22 @@ const ManageGuidesPage = () => {
                     <tbody className="divide-y divide-slate-700">
                         {loading && <tr><td colSpan="4"><LoadingSpinner /></td></tr>}
                         {error && <tr><td colSpan="4" className="text-center text-red-500 py-4">{error}</td></tr>}
+
+                        {!loading && !error && guides.length === 0 && (
+                            <tr><td colSpan="4" className="text-center text-slate-400 py-4">Nenhum guia encontrado.</td></tr>
+                        )}
+
                         {!loading && !error && guides.map(guide => (
                             <tr key={guide.id} className="hover:bg-slate-800/50">
                                 <td className="px-6 py-4">
                                     <div className="flex items-center">
-                                        <img className="h-10 w-10 object-cover rounded-md mr-4" src={guide.image_url || 'https://via.placeholder.com/40'} alt={guide.title} />
-                                        <div className="text-sm font-medium text-white">{guide.title}</div>
+                                        <img className="h-10 w-10 object-cover rounded-md mr-4" src={guide.imagem_url || 'https://via.placeholder.com/40'} alt={guide.titulo} />
+                                        <div className="text-sm font-medium text-white">{guide.titulo}</div>
                                     </div>
                                 </td>
-                                <td className="px-6 py-4 text-sm text-slate-300">{guide.author}</td>
-                                <td className="px-6 py-4 text-sm text-slate-300">{guide.type}</td>
+                                <td className="px-6 py-4 text-sm text-slate-300">{guide.autor}</td>
+                                <td className="px-6 py-4 text-sm text-slate-300">{guide.tipo}</td>
                                 <td className="px-6 py-4 text-right text-sm space-x-2">
-                                    {/* 6. Botões conectados às funções */}
                                     <button onClick={() => handleEdit(guide)} className="text-sky-400 hover:text-sky-300 p-1"><Edit size={18} /></button>
                                     <button onClick={() => handleDelete(guide.id)} className="text-red-500 hover:text-red-400 p-1"><Trash2 size={18} /></button>
                                 </td>
@@ -124,18 +141,15 @@ const ManageGuidesPage = () => {
                 </table>
             </div>
 
-            {/* 7. Modal e Formulário adaptados */}
             <Modal
                 isOpen={isModalOpen}
-                onClose={() => {
-                    setIsModalOpen(false);
-                    setEditingGuide(null); // Limpa o estado de edição ao fechar
-                }}
+                onClose={() => { setIsModalOpen(false); setEditingGuide(null); }}
                 title={editingGuide ? "Editar Guia" : "Adicionar Novo Guia"}
             >
                 <CreateGuideForm
                     onGuideSaved={handleGuideSaved}
                     guideToEdit={editingGuide}
+                    allCategories={allCategories}
                 />
             </Modal>
         </div>

@@ -3,29 +3,21 @@ import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { BASE_URL } from '../../services/api';
 
-// 1. O componente agora aceita as props onGuideSaved e guideToEdit
-const CreateGuideForm = ({ onGuideSaved, guideToEdit }) => {
-    // 2. Determina se o formulário está em modo de edição
+const CreateGuideForm = ({ onGuideSaved, guideToEdit, allCategories = [] }) => {
     const isEditMode = Boolean(guideToEdit);
-
     const { register, handleSubmit, formState: { errors }, reset, setValue } = useForm();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [message, setMessage] = useState('');
 
-    // 3. useEffect para preencher o formulário quando estiver em modo de edição
     useEffect(() => {
         if (isEditMode && guideToEdit) {
-            // Preenche cada campo do formulário com os dados do guia
-            setValue('title', guideToEdit.title);
-            setValue('author', guideToEdit.author);
+            setValue('titulo', guideToEdit.titulo);
+            setValue('autor', guideToEdit.autor);
             setValue('link', guideToEdit.link);
-            setValue('type', guideToEdit.type);
-            // Converte o array de tags em uma string separada por vírgula
-            setValue('tags', guideToEdit.tags.join(', '));
-            // Extrai apenas o nome do arquivo da URL da imagem
-            setValue('imageFilename', guideToEdit.image_url.split('/').pop());
+            setValue('tipo', guideToEdit.tipo);
+            setValue('imagem_url', guideToEdit.imagem_url);
+            setValue('id_categoria', guideToEdit.id_categoria);
         } else {
-            // Limpa o formulário se não estiver em modo de edição
             reset();
         }
     }, [isEditMode, guideToEdit, setValue, reset]);
@@ -35,42 +27,41 @@ const CreateGuideForm = ({ onGuideSaved, guideToEdit }) => {
         setMessage('');
 
         try {
-            // Converte a string de tags em um array de texto para o PostgreSQL
-            const tagsArray = data.tags.split(',').map(tag => tag.trim()).filter(tag => tag);
-
-            const guideDataToSave = {
-                title: data.title,
-                author: data.author,
-                type: data.type,
+            const innerJson = {
+                titulo: data.titulo,
+                autor: data.autor,
+                tipo: data.tipo,
                 link: data.link,
-                image_url: `/images/${data.imageFilename}`,
-                tags: `{${tagsArray.join(',')}}`, // Formato de array do PostgreSQL
+                imagem_url: data.imagem_url,
+                id_categoria: data.id_categoria ? data.id_categoria : null,
             };
 
-            let response;
-            // 4. Lógica de envio diferente para criar e editar
             if (isEditMode) {
-                // MODO EDIÇÃO: Usa o método PATCH e a URL com o ID do guia
-                response = await fetch(`${BASE_URL}/guides?id=eq.${guideToEdit.id}`, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(guideDataToSave),
-                });
-                if (!response.ok) throw new Error('Falha ao atualizar o guia.');
-
+                innerJson.id = guideToEdit.id;
             } else {
-                // MODO CRIAÇÃO: Usa o método POST
-                response = await fetch(`${BASE_URL}/guides`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(guideDataToSave),
-                });
-                if (!response.ok) throw new Error('Falha ao criar o guia.');
+                innerJson.id = crypto.randomUUID();
+            }
+
+            const requestBody = { json_input: innerJson };
+
+            const headers = {
+                'Content-Type': 'application/json',
+                'ngrok-skip-browser-warning': 'true'
+            };
+
+            const response = await fetch(`${BASE_URL}/rpc/fn_cadastrar_atualizar_guia`, {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify(requestBody),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Falha ao salvar o guia.');
             }
 
             setMessage(isEditMode ? 'Guia atualizado com sucesso!' : 'Guia criado com sucesso!');
             reset();
-            // A props agora se chama onGuideSaved
             if (onGuideSaved) onGuideSaved();
 
         } catch (error) {
@@ -83,38 +74,45 @@ const CreateGuideForm = ({ onGuideSaved, guideToEdit }) => {
     return (
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 max-w-lg">
             <div>
-                <label htmlFor="title" className="block text-sm font-medium text-slate-300">Título do Guia</label>
-                <input type="text" {...register('title', { required: true })} className="mt-1 block w-full bg-slate-700 border-slate-600 rounded-md" />
+                <label htmlFor="titulo" className="block text-sm font-medium text-slate-300">Título do Guia</label>
+                <input type="text" {...register('titulo', { required: true })} className="mt-1 block w-full bg-slate-700 border-slate-600 rounded-md" />
             </div>
             <div>
-                <label htmlFor="author" className="block text-sm font-medium text-slate-300">Autor</label>
-                <input type="text" {...register('author')} className="mt-1 block w-full bg-slate-700 border-slate-600 rounded-md" />
+                <label htmlFor="autor" className="block text-sm font-medium text-slate-300">Autor</label>
+                <input type="text" {...register('autor')} className="mt-1 block w-full bg-slate-700 border-slate-600 rounded-md" />
             </div>
             <div>
                 <label htmlFor="link" className="block text-sm font-medium text-slate-300">Link (URL)</label>
                 <input type="url" {...register('link', { required: true })} className="mt-1 block w-full bg-slate-700 border-slate-600 rounded-md" />
             </div>
             <div>
-                <label htmlFor="type" className="block text-sm font-medium text-slate-300">Tipo de Conteúdo</label>
-                <select {...register('type')} className="mt-1 block w-full bg-slate-700 border-slate-600 rounded-md">
+                <label htmlFor="imagem_url" className="block text-sm font-medium text-slate-300">URL da Imagem</label>
+                <input type="text" placeholder="http://exemplo.com/imagem.png" {...register('imagem_url')} className="mt-1 block w-full bg-slate-700 border-slate-600 rounded-md" />
+            </div>
+            <div>
+                <label htmlFor="tipo" className="block text-sm font-medium text-slate-300">Tipo de Conteúdo</label>
+                <select {...register('tipo')} className="mt-1 block w-full bg-slate-700 border-slate-600 rounded-md">
                     <option value="video">Vídeo</option>
                     <option value="text">Texto</option>
                 </select>
             </div>
+
             <div>
-                <label htmlFor="tags" className="block text-sm font-medium text-slate-300">Tags (separadas por vírgula)</label>
-                <input type="text" placeholder="Sekiro, Platina, Souls-like" {...register('tags')} className="mt-1 block w-full bg-slate-700 border-slate-600 rounded-md" />
-            </div>
-            <div>
-                <label htmlFor="imageFilename" className="block text-sm font-medium text-slate-300">Nome do Arquivo da Imagem</label>
-                <input type="text" placeholder="ex: platina1.png" {...register('imageFilename')} className="mt-1 block w-full bg-slate-700 border-slate-600 rounded-md" />
+                <label htmlFor="id_categoria" className="block text-sm font-medium text-slate-300">Categoria</label>
+                <select {...register('id_categoria', { required: true })} className="mt-1 block w-full bg-slate-700 border-slate-600 rounded-md">
+                    <option value="">Selecione uma categoria</option>
+                    {/* CORREÇÃO: O 'value' agora é o ID, e o texto exibido é o nome */}
+                    {allCategories.map(cat => (
+                        <option key={cat.id} value={cat.id}>{cat.nome_categoria}</option>
+                    ))}
+                </select>
+                {errors.id_categoria && <p className="text-red-500 text-xs mt-1">É necessário selecionar uma categoria.</p>}
             </div>
 
-            {/* O texto do botão muda de acordo com o modo */}
             <button type="submit" disabled={isSubmitting} className="w-full bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-4 rounded-md">
                 {isSubmitting ? 'Salvando...' : (isEditMode ? 'Salvar Alterações' : 'Salvar Guia')}
             </button>
-            {message && <p className="text-center mt-2">{message}</p>}
+            {message && <p className={`text-center mt-2 ${message.startsWith('Erro') ? 'text-red-400' : 'text-green-400'}`}>{message}</p>}
         </form>
     );
 };

@@ -1,87 +1,110 @@
 // src/pages/UserProfilePage.jsx
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import ProfileCard from '../components/ProfileCard';
-import UserStats from '../components/UserStats';
-import FriendList from '../components/FriendList'; // Reutilizando o componente de amigos
-import { MoreHorizontal } from 'react-feather';
-
-// --- DADOS FICTÍCIOS ---
-const userProfile = {
-    username: "DoctorBunny00",
-    level: 14,
-    avatarUrl: `https://avatar.iran.liara.run/public/boy?username=DoctorBunny`,
-    about: "A game addict. I have been playing games since when I was 9, so you can say it's part of my life.",
-    stats: {
-        gamesPlayed: 124,
-        totalDuration: 286,
-        achievements: 25,
-    },
-    highlightedGames: [
-        { id: 1, name: 'Clash Of Clans', coverUrl: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1vce.jpg' },
-        { id: 2, name: 'Plants Vs Zombies', coverUrl: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1x7d.jpg' },
-        { id: 3, name: 'Mini Militia', coverUrl: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1nqy.jpg' },
-        { id: 4, name: 'Mario Kart', coverUrl: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1tkv.jpg' }
-    ],
-    recentlyPlayed: [
-        { id: 1, name: 'Mini Militia', time: 'Today at 14:33' },
-        { id: 2, name: 'Plants Vs Zombies', time: 'Today at 12:33' },
-        { id: 3, name: 'Mario Kart', time: 'Today at 12:15' },
-    ]
-};
-// --- FIM DOS DADOS ---
-
-const HighlightedGames = ({ games }) => (
-    <div className="bg-[#1f2128]/80 p-6 rounded-2xl shadow-lg border border-slate-700/50">
-        <h3 className="text-xl font-bold text-white mb-4">Highlighted Games</h3>
-        <div className="grid grid-cols-2 gap-4">
-            {games.map(game => (
-                <div key={game.id} className="group cursor-pointer">
-                    <img src={game.coverUrl} alt={game.name} className="rounded-lg w-full h-auto aspect-square object-cover transition-transform group-hover:scale-105" />
-                    <p className="text-center text-sm mt-2 text-slate-300 group-hover:text-white">{game.name}</p>
-                </div>
-            ))}
-        </div>
-    </div>
-);
-
-const RecentlyPlayed = ({ games }) => (
-    <div className="bg-[#1f2128]/80 p-6 rounded-2xl shadow-lg border border-slate-700/50">
-        <h3 className="text-xl font-bold text-white mb-4">Recently Played</h3>
-        <ul className="space-y-3">
-            {games.map(game => (
-                <li key={game.id} className="flex items-center justify-between p-2 rounded-md hover:bg-sky-500/10">
-                    <div className="flex items-center gap-3">
-                        <div className="bg-slate-700 w-10 h-10 rounded-md flex-shrink-0"></div>
-                        <div>
-                            <p className="font-semibold text-white">{game.name}</p>
-                            <p className="text-xs text-slate-400">{game.time}</p>
-                        </div>
-                    </div>
-                    <button className="text-slate-400 hover:text-white"><MoreHorizontal size={20} /></button>
-                </li>
-            ))}
-        </ul>
-    </div>
-);
+import LoadingSpinner from '../components/LoadingSpinner';
+import { BASE_URL } from '../services/api';
 
 const UserProfilePage = () => {
+    const [userProfile, setUserProfile] = useState(null);
+    const [gamesOwnedCount, setGamesOwnedCount] = useState(0); // NOVO: Estado para contagem de jogos possuídos
+    const [wishlistCount, setWishlistCount] = useState(0);     // NOVO: Estado para contagem de itens na lista de desejos
+    const [isAdmin, setIsAdmin] = useState(false);             // NOVO: Estado para status de administrador
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+        const fetchUserProfileData = async () => { // Renomeado para ser mais abrangente
+            setLoading(true);
+            setError(null);
+            const userInfo = JSON.parse(localStorage.getItem('user_info'));
+            const userId = userInfo?.id;
+
+            if (!userId) {
+                setError('Usuário não logado ou ID do usuário não encontrado.');
+                setLoading(false);
+                return;
+            }
+
+            try {
+                const headers = { 'ngrok-skip-browser-warning': 'true' };
+
+                // Busca paralela para dados do perfil, jogos possuídos e lista de desejos
+                const [
+                    profileResponse,
+                    gamesOwnedResponse,
+                    wishlistResponse
+                ] = await Promise.all([
+                    fetch(`${BASE_URL}/rpc/fn_buscar_usuario?id_usuario_input=${userId}`, { headers }),
+                    fetch(`${BASE_URL}/rpc/fn_listar_vendas_usuario?id_usuario_input=${userId}`, { headers }),
+                    fetch(`${BASE_URL}/rpc/fn_listar_lista_desejos_usuario?id_usuario_input=${userId}`, { headers })
+                ]);
+
+                if (!profileResponse.ok) throw new Error('Falha ao buscar detalhes do usuário.');
+                if (!gamesOwnedResponse.ok) console.error('Falha ao buscar jogos possuídos.'); // Logar, mas não bloquear
+                if (!wishlistResponse.ok) console.error('Falha ao buscar lista de desejos.'); // Logar, mas não bloquear
+
+                const profileData = await profileResponse.json();
+                const gamesOwnedData = gamesOwnedResponse.ok ? await gamesOwnedResponse.json() : [];
+                const wishlistData = wishlistResponse.ok ? await wishlistResponse.json() : [];
+
+                if (profileData && profileData.length > 0) {
+                    const fetchedUser = profileData[0];
+                    setUserProfile({
+                        username: fetchedUser.nome_usuario,
+                        avatarUrl: fetchedUser.avatar_url || `https://avatar.iran.liara.run/public/boy?username=${fetchedUser.nome_usuario}`,
+                        email: fetchedUser.email,
+                        level: null, // Não fornecido pela API
+                        about: null, // Não fornecido pela API
+                    });
+                    setIsAdmin(fetchedUser.administrador); // Define o status de administrador
+                } else {
+                    setError('Usuário não encontrado na API.');
+                }
+
+                // Contagens dinâmicas
+                setGamesOwnedCount(gamesOwnedData.length);
+                setWishlistCount(wishlistData.length);
+
+            } catch (e) {
+                setError(e.message);
+                console.error("Erro ao buscar dados do perfil:", e);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchUserProfileData();
+    }, []);
+
+    if (loading) return <LoadingSpinner />;
+    if (error) return <div className="text-center text-red-500 py-4">{error}</div>;
+    if (!userProfile) return null;
+
     return (
-        <div className="w-full grid grid-cols-1 lg:grid-cols-4 gap-6 xl:gap-8 items-start">
-            {/* Coluna Esquerda */}
-            <div className="lg:col-span-1 space-y-6">
-                <HighlightedGames games={userProfile.highlightedGames} />
-                <UserStats stats={userProfile.stats} />
-            </div>
-
-            {/* Coluna Central */}
-            <div className="lg:col-span-2 space-y-6">
+        <div className="w-full flex flex-col items-center p-4"> {/* Centralizando o card principal */}
+            <div className="w-full max-w-md"> {/* Limitar largura para centralizar melhor */}
                 <ProfileCard user={userProfile} />
-                <RecentlyPlayed games={userProfile.recentlyPlayed} />
-            </div>
 
-            {/* Coluna Direita (Reutilizando FriendList) */}
-            <div className="lg:col-span-1 bg-[#1f2128]/80 backdrop-blur-sm p-4 rounded-2xl shadow-lg border border-slate-700/50 h-full">
-                <FriendList />
+                {/* NOVO: Bloco de Informações Dinâmicas Adicionais */}
+                <div className="bg-slate-800 p-6 rounded-lg shadow-lg mt-6 border border-slate-700/50">
+                    <h3 className="text-xl font-bold text-white mb-4">Informações Adicionais</h3>
+                    <div className="space-y-3 text-slate-300">
+                        <p className="flex justify-between items-center">
+                            <span className="font-semibold">Cargo:</span>
+                            <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${isAdmin ? 'bg-red-500/20 text-red-400' : 'bg-sky-500/20 text-sky-300'}`}>
+                                {isAdmin ? 'Administrador' : 'Usuário Padrão'}
+                            </span>
+                        </p>
+                        <p className="flex justify-between items-center">
+                            <span className="font-semibold">Jogos na Biblioteca:</span>
+                            <span className="text-white font-medium">{gamesOwnedCount}</span>
+                        </p>
+                        <p className="flex justify-between items-center">
+                            <span className="font-semibold">Jogos na Lista de Desejos:</span>
+                            <span className="text-white font-medium">{wishlistCount}</span>
+                        </p>
+                    </div>
+                </div>
             </div>
         </div>
     );

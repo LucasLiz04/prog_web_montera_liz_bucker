@@ -11,12 +11,14 @@ const ManageUsersPage = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [editingUser, setEditingUser] = useState(null);
 
-    // Função para buscar os usuários da API
     const fetchUsers = async () => {
         setLoading(true);
+        setError(null);
         try {
-            const response = await fetch(`${BASE_URL}/users?order=id.asc`);
+            const headers = { 'ngrok-skip-browser-warning': 'true' };
+            const response = await fetch(`${BASE_URL}/rpc/fn_listar_usuarios`, { method: 'GET', headers: headers });
             if (!response.ok) throw new Error('Falha ao buscar os usuários.');
             const data = await response.json();
             setUsers(data);
@@ -27,14 +29,53 @@ const ManageUsersPage = () => {
         }
     };
 
-    // useEffect para buscar os usuários quando a página carrega
     useEffect(() => {
         fetchUsers();
     }, []);
 
-    const handleUserCreated = () => {
-        setIsModalOpen(false); // Fecha o modal
-        fetchUsers(); // Atualiza a lista de usuários
+    const handleUserSaved = () => {
+        setIsModalOpen(false);
+        setEditingUser(null);
+        fetchUsers();
+    };
+
+    const handleOpenCreateModal = () => {
+        setEditingUser(null);
+        setIsModalOpen(true);
+    };
+
+    const handleEdit = (user) => {
+        setEditingUser(user);
+        setIsModalOpen(true);
+    };
+
+    const handleDelete = async (userId) => {
+        const userToDelete = users.find(u => u.id === userId);
+        if (window.confirm(`Tem certeza que deseja excluir o usuário "${userToDelete?.nome_usuario}"?`)) {
+            try {
+                const headers = {
+                    'Content-Type': 'application/json',
+                    'ngrok-skip-browser-warning': 'true'
+                };
+                const body = { id_usuario_input: userId };
+
+                const response = await fetch(`${BASE_URL}/rpc/fn_excluir_usuario`, {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify(body)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'Falha ao excluir o usuário.');
+                }
+
+                alert('Usuário excluído com sucesso!');
+                fetchUsers();
+            } catch (error) {
+                alert(`Erro: ${error.message}`);
+            }
+        }
     };
 
     return (
@@ -42,14 +83,13 @@ const ManageUsersPage = () => {
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-3xl font-bold">Gerenciar Usuários</h1>
                 <button
-                    onClick={() => setIsModalOpen(true)}
+                    onClick={handleOpenCreateModal}
                     className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md transition-colors"
                 >
                     Adicionar Usuário
                 </button>
             </div>
 
-            {/* Tabela de Usuários */}
             <div className="bg-slate-900 border border-slate-700 rounded-lg overflow-hidden">
                 <table className="min-w-full divide-y divide-slate-700">
                     <thead className="bg-slate-800">
@@ -71,24 +111,22 @@ const ManageUsersPage = () => {
                             <tr key={user.id} className="hover:bg-slate-800/50">
                                 <td className="px-6 py-4 whitespace-nowrap">
                                     <div className="flex items-center">
-                                        <img className="h-10 w-10 rounded-full mr-4" src={user.avatarUrl || 'https://via.placeholder.com/40'} alt="" />
-                                        <div className="text-sm font-medium text-white">{user.username}</div>
+                                        {/* CORREÇÃO AQUI: Usar i.pravatar.cc para avatar padrão */}
+                                        <img className="h-10 w-10 rounded-full mr-4" src={user.avatar_url || `https://i.pravatar.cc/40?u=${user.email}`} alt={`Avatar de ${user.nome_usuario}`} />
+                                        <div className="text-sm font-medium text-white">{user.nome_usuario}</div>
                                     </div>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap">
                                     <div className="text-sm text-slate-300">{user.email}</div>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap">
-                                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${user.role === 'Admin' ? 'bg-red-500/20 text-red-400' :
-                                        user.role === 'Moderator' ? 'bg-yellow-500/20 text-yellow-400' :
-                                            'bg-sky-500/20 text-sky-300'
-                                        }`}>
-                                        {user.role}
+                                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${user.administrador ? 'bg-red-500/20 text-red-400' : 'bg-sky-500/20 text-sky-300'}`}>
+                                        {user.administrador ? 'Admin' : 'User'}
                                     </span>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                                    <button className="text-sky-400 hover:text-sky-300 p-1"><Edit size={18} /></button>
-                                    <button className="text-red-500 hover:text-red-400 p-1"><Trash2 size={18} /></button>
+                                    <button onClick={() => handleEdit(user)} className="text-sky-400 hover:text-sky-300 p-1"><Edit size={18} /></button>
+                                    <button onClick={() => handleDelete(user.id)} className="text-red-500 hover:text-red-400 p-1"><Trash2 size={18} /></button>
                                 </td>
                             </tr>
                         ))}
@@ -96,9 +134,15 @@ const ManageUsersPage = () => {
                 </table>
             </div>
 
-            {/* Modal para criar um novo usuário */}
-            <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Adicionar Novo Usuário">
-                <CreateUserForm onUserCreated={handleUserCreated} />
+            <Modal
+                isOpen={isModalOpen}
+                onClose={() => { setIsModalOpen(false); setEditingUser(null); }}
+                title={editingUser ? "Editar Usuário" : "Adicionar Novo Usuário"}
+            >
+                <CreateUserForm
+                    onUserCreated={handleUserSaved}
+                    userToEdit={editingUser}
+                />
             </Modal>
         </div>
     );

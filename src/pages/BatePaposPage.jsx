@@ -1,10 +1,10 @@
 // src/pages/BatePaposPage.jsx
-import React from 'react';
-// O HeroSection foi removido para se adequar ao layout da plataforma
+import React, { useState } from 'react'; // Importa o useState
 import ChatThreadItem from '../components/ChatThreadItem';
+import PrototypeAlert from '../components/PrototypeAlert'; // Importa o componente de alerta
 import { MessageSquare, Plus } from 'react-feather';
 
-// --- DADOS FICTÍCIOS (permanecem os mesmos) ---
+// --- DADOS FICTÍCIOS ---
 const threadsData = [
     {
         id: 1,
@@ -37,8 +37,17 @@ const threadsData = [
 // --- FIM DOS DADOS ---
 
 function BatePaposPage() {
+    // Cria o estado para controlar a visibilidade do alerta
+    const [showAlert, setShowAlert] = useState(true);
+
     return (
         <div className="w-full">
+            {/* Renderiza o componente do alerta */}
+            <PrototypeAlert
+                isOpen={showAlert}
+                onClose={() => setShowAlert(false)}
+            />
+
             {/* Cabeçalho adaptado para o layout da Platform */}
             <header className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
                 <div className="flex items-center gap-3">

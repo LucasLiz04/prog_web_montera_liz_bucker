@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import meuIcone from '../assets/gameWikiLogoBlackNoBg.png';
 import { Eye, EyeOff, ArrowLeft } from 'react-feather';
+import { BASE_URL } from '../services/api';
 
 const LoginPage = () => {
     const navigate = useNavigate();
@@ -17,62 +18,142 @@ const LoginPage = () => {
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     const [errors, setErrors] = useState({});
+    const [isLoading, setIsLoading] = useState(false);
+    const [apiError, setApiError] = useState('');
 
     const togglePasswordVisibility = () => setShowPassword(!showPassword);
     const toggleConfirmPasswordVisibility = () => setShowConfirmPassword(!showConfirmPassword);
 
+    const resetFormState = () => {
+        setErrors({});
+        setApiError('');
+        setIsLoading(false);
+    };
+
     const handleInitialLoginClick = () => {
         setIsLoginTab(true);
         setViewMode('form');
-        setErrors({});
+        resetFormState();
     };
 
     const handleInitialSignUpClick = () => {
         setIsLoginTab(false);
         setViewMode('form');
-        setErrors({});
+        resetFormState();
     };
 
-    // **FUNÇÃO DE VALIDAÇÃO ATUALIZADA**
     const validateForm = () => {
         const newErrors = {};
-        // Expressão regular para validar o formato do e-mail
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-        // Validação para a aba de Registro
         if (!isLoginTab) {
             if (!fullName) newErrors.fullName = "O nome completo é obrigatório.";
             if (password !== confirmPassword) {
-                newErrors.confirmPassword = "As senhas não coincidem. Tente novamente.";
+                newErrors.confirmPassword = "As senhas não coincidem.";
             }
         }
 
-        // Validação de E-mail
         if (!email) {
             newErrors.email = "O email é obrigatório.";
         } else if (!emailRegex.test(email)) {
-            // AQUI VOCÊ EDITA A MENSAGEM DE E-MAIL INVÁLIDO
-            newErrors.email = "Por favor, insira um formato de email válido.";
+            newErrors.email = "Formato de email inválido.";
         }
 
-        // Validação de Senha
         if (!password) newErrors.password = "A senha é obrigatória.";
 
         setErrors(newErrors);
-
         return Object.keys(newErrors).length === 0;
     };
 
-    const handleFormSubmit = (e) => {
+    const handleFormSubmit = async (e) => {
         e.preventDefault();
+        resetFormState();
 
-        const isFormValid = validateForm();
+        if (!validateForm()) {
+            return;
+        }
 
-        if (isFormValid) {
-            console.log("Formulário válido, enviando...");
-            navigate('/platform');
+        setIsLoading(true);
+
+        const isLogin = isLoginTab;
+        const rpcFunction = isLogin ? 'fn_efetuar_login' : 'fn_cadastrar_atualizar_usuario';
+
+        let requestBody;
+
+        if (isLogin) {
+            requestBody = {
+                email_input: email,
+                senha_input: password
+            };
         } else {
-            console.log("Formulário inválido, verifique os erros.");
+            requestBody = {
+                json_input: {
+                    id: crypto.randomUUID(),
+                    nome_usuario: fullName,
+                    email: email,
+                    senha: password,
+                    administrador: false
+                }
+            };
+        }
+
+        try {
+            const headers = {
+                'Content-Type': 'application/json',
+                'ngrok-skip-browser-warning': 'true'
+            };
+
+            const response = await fetch(`${BASE_URL}/rpc/${rpcFunction}`, {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify(requestBody)
+            });
+
+            if (!response.ok) {
+                const errorResult = await response.json().catch(() => ({ message: 'Erro desconhecido no servidor.' }));
+                throw new Error(errorResult.message || 'Falha na comunicação com o servidor.');
+            }
+
+            if (isLogin) {
+                const result = await response.json();
+
+                if (result && result.length > 0 && result[0].status === 'erro') {
+                    throw new Error(result[0]?.mensagem || 'Credenciais inválidas.');
+                }
+
+                const user = result && result[0];
+                if (user && user.nome_usuario) {
+                    // CORREÇÃO: Mapear id_usuario para id antes de salvar no localStorage
+                    const userToStore = {
+                        ...user,
+                        id: user.id_usuario // Mapeia id_usuario para id
+                    };
+
+                    localStorage.setItem('user_token', 'true');
+                    localStorage.setItem('user_info', JSON.stringify(userToStore)); // Salva o objeto corrigido
+
+                    navigate('/platform');
+                } else {
+                    throw new Error('Credenciais inválidas.');
+                }
+            } else {
+                const result = await response.json().catch(() => null);
+
+                if (result && result.length > 0 && result[0].status === 'erro') {
+                    throw new Error(result[0]?.mensagem || 'Falha ao registrar usuário.');
+                }
+                if (result && result.message) {
+                    throw new Error(result.message);
+                }
+
+                alert('Usuário cadastrado com sucesso! Por favor, faça o login.');
+                setIsLoginTab(true);
+            }
+
+        } catch (error) {
+            setApiError(error.message);
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -117,7 +198,7 @@ const LoginPage = () => {
                         <button
                             onClick={() => {
                                 setViewMode('initial');
-                                setErrors({});
+                                resetFormState();
                             }}
                             className="absolute top-4 left-4 text-gray-500 hover:text-gray-700 transition-colors"
                             title="Voltar"
@@ -127,14 +208,14 @@ const LoginPage = () => {
 
                         <div className="flex mt-8 mb-5 rounded-lg overflow-hidden border border-gray-300">
                             <button
-                                onClick={() => { setIsLoginTab(false); setErrors({}); }}
+                                onClick={() => { setIsLoginTab(false); resetFormState(); }}
                                 className={`flex-1 py-2.5 px-4 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white ${!isLoginTab ? 'bg-[#0653AF] text-white focus:ring-[#0653AF]' : 'bg-gray-200 hover:bg-gray-300 text-gray-700 focus:ring-gray-400'
                                     }`}
                             >
                                 Registrar
                             </button>
                             <button
-                                onClick={() => { setIsLoginTab(true); setErrors({}); }}
+                                onClick={() => { setIsLoginTab(true); resetFormState(); }}
                                 className={`flex-1 py-2.5 px-4 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white ${isLoginTab ? 'bg-[#0653AF] text-white focus:ring-[#0653AF]' : 'bg-gray-200 hover:bg-gray-300 text-gray-700 focus:ring-gray-400'
                                     }`}
                             >
@@ -146,7 +227,6 @@ const LoginPage = () => {
                             {isLoginTab ? 'Fazer o login' : 'Fazer registro'}
                         </h2>
 
-                        {/* O atributo 'required' foi removido dos inputs */}
                         <form onSubmit={handleFormSubmit} className="space-y-4 text-left" noValidate>
                             {!isLoginTab && (
                                 <div>
@@ -163,7 +243,7 @@ const LoginPage = () => {
                             )}
                             <div>
                                 <label htmlFor="email" className="block text-sm font-medium text-gray-600 mb-1">
-                                    Email: {!isLoginTab && <span className="text-red-500">*</span>}
+                                    Email: <span className="text-red-500">*</span>
                                 </label>
                                 <input
                                     type="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)}
@@ -174,7 +254,7 @@ const LoginPage = () => {
                             </div>
                             <div>
                                 <label htmlFor="password" className="block text-sm font-medium text-gray-600 mb-1">
-                                    Senha: {!isLoginTab && <span className="text-red-500">*</span>}
+                                    Senha: <span className="text-red-500">*</span>
                                 </label>
                                 <div className="relative">
                                     <input
@@ -206,11 +286,15 @@ const LoginPage = () => {
                                     {errors.confirmPassword && <p className="text-red-500 text-xs mt-1">{errors.confirmPassword}</p>}
                                 </div>
                             )}
+
+                            {apiError && <p className="text-red-500 text-sm text-center mt-4">{apiError}</p>}
+
                             <button
                                 type="submit"
-                                className="w-full bg-[#0653AF] text-white font-semibold py-2.5 px-4 rounded-md transition-transform duration-200 ease-in-out hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white focus:ring-[#0653AF]"
+                                disabled={isLoading}
+                                className="w-full bg-[#0653AF] text-white font-semibold py-2.5 px-4 rounded-md transition-transform duration-200 ease-in-out hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white focus:ring-[#0653AF] disabled:opacity-50"
                             >
-                                {isLoginTab ? 'Logar' : 'Registrar'}
+                                {isLoading ? 'Processando...' : (isLoginTab ? 'Logar' : 'Registrar')}
                             </button>
                         </form>
                         {isLoginTab && (

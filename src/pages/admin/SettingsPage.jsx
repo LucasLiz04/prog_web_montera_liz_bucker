@@ -1,9 +1,19 @@
 // src/pages/admin/SettingsPage.jsx
-import React from 'react';
+import React, { useState } from 'react'; // NOVO: Importa useState
+import PrototypeAlert from '../../components/PrototypeAlert'; // NOVO: Importa PrototypeAlert
 
 const SettingsPage = () => {
+    // NOVO: Estado para controlar a visibilidade do alerta
+    const [showAlert, setShowAlert] = useState(true);
+
     return (
         <div>
+            {/* NOVO: Renderiza o componente do alerta */}
+            <PrototypeAlert
+                isOpen={showAlert}
+                onClose={() => setShowAlert(false)}
+            />
+
             <h1 className="text-3xl font-bold mb-6">Configurações da Plataforma</h1>
 
             <div className="space-y-8 max-w-2xl">

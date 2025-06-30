@@ -1,7 +1,8 @@
 // src/pages/FriendsPage.jsx
-import React from 'react';
+import React, { useState } from 'react'; // NOVO: Importa useState
 import { Search, UserPlus } from 'react-feather';
 import FriendCard from '../components/FriendCard';
+import PrototypeAlert from '../components/PrototypeAlert'; // NOVO: Importa PrototypeAlert
 
 // --- DADOS FICTÍCIOS ---
 const friendsData = [
@@ -15,8 +16,17 @@ const friendsData = [
 // --- FIM DOS DADOS ---
 
 const FriendsPage = () => {
+    // NOVO: Estado para controlar a visibilidade do alerta
+    const [showAlert, setShowAlert] = useState(true);
+
     return (
         <div className="w-full">
+            {/* NOVO: Renderiza o componente do alerta */}
+            <PrototypeAlert
+                isOpen={showAlert}
+                onClose={() => setShowAlert(false)}
+            />
+
             {/* Cabeçalho */}
             <header className="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
                 <h1 className="text-3xl font-bold text-white">

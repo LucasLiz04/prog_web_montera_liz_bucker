@@ -1,46 +1,90 @@
 // src/pages/LibraryPage.jsx
-import React from 'react';
-import { ChevronDown } from 'react-feather';
+import React, { useState, useEffect } from 'react';
+import { BookOpen } from 'react-feather';
 import LibraryGameCard from '../components/LibraryGameCard';
-
-// --- Dados Fictícios para a Biblioteca ---
-const myGames = [
-    { id: 1, title: 'Anthem', coverUrl: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1nqy.jpg' },
-    { id: 2, title: 'Call of Duty: Black Ops 4', coverUrl: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1tkv.jpg' },
-    { id: 3, title: 'Sea of Thieves', coverUrl: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1x7d.jpg' },
-    { id: 4, title: 'Battlefield V', coverUrl: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co2l1b.jpg' },
-    { id: 5, title: 'DOTA 2', coverUrl: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co646y.jpg' },
-    { id: 6, title: 'League of Legends', coverUrl: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1vce.jpg' },
-    { id: 7, title: 'Apex Legends', coverUrl: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co5zmg.jpg' },
-    { id: 8, title: 'Fortnite', coverUrl: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co64cf.jpg' },
-    { id: 9, title: "Tom Clancy's The Division 2", coverUrl: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1w2p.jpg' },
-    { id: 10, title: 'Dead by Daylight', coverUrl: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co5pua.jpg' },
-    { id: 11, title: 'PlayerUnknown\'s Battlegrounds', coverUrl: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co5w0w.jpg' },
-    { id: 12, title: 'StarCraft II', coverUrl: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1tmu.jpg' },
-];
-// --- Fim dos Dados Fictícios ---
-
+import { BASE_URL } from '../services/api';
+import LoadingSpinner from '../components/LoadingSpinner';
+import ActivationKeyModal from '../components/ActivationKeyModal';
 
 const LibraryPage = () => {
+    const [libraryGames, setLibraryGames] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [selectedGame, setSelectedGame] = useState(null);
+
+    useEffect(() => {
+        const fetchLibraryGames = async () => {
+            setLoading(true);
+            setError(null);
+            const userInfo = JSON.parse(localStorage.getItem('user_info'));
+            const userId = userInfo?.id;
+
+            if (!userId) {
+                setError('Usuário não logado ou ID do usuário não encontrado.');
+                setLoading(false);
+                return;
+            }
+
+            try {
+                const headers = { 'ngrok-skip-browser-warning': 'true' };
+                const response = await fetch(`${BASE_URL}/rpc/fn_listar_vendas_usuario?id_usuario_input=${userId}`, {
+                    method: 'GET',
+                    headers: headers
+                });
+
+                if (!response.ok) {
+                    throw new Error('Falha ao buscar jogos da biblioteca.');
+                }
+
+                const data = await response.json();
+                setLibraryGames(data);
+
+            } catch (e) {
+                setError(e.message);
+                console.error("Erro ao buscar jogos da biblioteca:", e);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchLibraryGames();
+    }, []);
+
     return (
         <div className="w-full">
-            {/* Cabeçalho */}
-            <header className="flex justify-between items-center mb-8">
-                <h1 className="text-3xl font-bold text-white">Game Library</h1>
-                <div className="flex items-center gap-2">
-                    <span className="text-sm text-slate-400">Sort by:</span>
-                    <button className="flex items-center gap-2 bg-gray-700/50 px-3 py-1.5 rounded-md text-sm text-white hover:bg-gray-600">
-                        Recently Played
-                        <ChevronDown size={16} />
-                    </button>
-                </div>
+            <ActivationKeyModal
+                game={selectedGame}
+                onClose={() => setSelectedGame(null)}
+            />
+
+            <header className="flex items-center gap-4 mb-8">
+                <BookOpen size={32} className="text-purple-500" />
+                <h1 className="text-3xl font-bold text-white">Minha Biblioteca</h1>
             </header>
 
-            {/* Grade de Jogos */}
-            <main className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-6 gap-y-8">
-                {myGames.map(game => (
-                    <LibraryGameCard key={game.id} game={game} />
-                ))}
+            <main>
+                {loading && <LoadingSpinner />}
+                {error && <p className="text-center text-red-500 py-4">{error}</p>}
+
+                {!loading && !error && libraryGames.length === 0 && (
+                    <p className="text-center text-slate-400 text-lg py-10">Sua biblioteca está vazia. Compre alguns jogos!</p>
+                )}
+
+                {!loading && !error && libraryGames.length > 0 && (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-6 gap-y-8">
+                        {libraryGames.map(game => (
+                            <div key={game.id} onClick={() => setSelectedGame(game)}>
+                                <LibraryGameCard
+                                    game={{
+                                        id: game.id,
+                                        nome: game.nome,
+                                        imagem_url: game.imagem_url,
+                                    }}
+                                />
+                            </div>
+                        ))}
+                    </div>
+                )}
             </main>
         </div>
     );
